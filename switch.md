@@ -187,7 +187,7 @@ Add the following line (substituting your username):
 username     ALL=(ALL) NOPASSWD:ALL
 ```
 
-For convenience, I rolled this process up into a [script](src/provision.sh) so I could easily try out different deployment configurations. Here's what I need to do to get my system up and running, after setting up the operating system, which was the most painful part of the iterative process.
+For convenience, I rolled this process up into some [scripts](src/core-switch/scripts) so I could easily try out different deployment configurations. Here's what I need to do to get my system up and running, after setting up the operating system, which was the most painful part of the iterative process.
 
 ```
 # in KVM
@@ -198,14 +198,14 @@ scp install.tgz username@remote_host:.
 
 # in KVM
 tar xzvf install.tgz
-install/provision.sh
+~/install/scripts/provision.sh
+sudo reboot
+
+# from ssh session
+~/install/scripts/deploy-openstack-yoga.sh
 ```
 
-You can deconstruct the script and see what I did - I am aware I could have plucked all the files into a single tar file and extracted them together from `/`. That wasn't how it evolved, and here we are. Notably, I install a few required packages in the script:
-
-```
-sudo apt -y install unzip net-tools bridge-utils
-```
+You can deconstruct the scripts and see what I did - I am aware I could have plucked all the files into a single tar file and extracted them together from `/`. That wasn't how it evolved, and here we are.
 
 ### Networking Setup
 

@@ -1,0 +1,27 @@
+--- /etc/keystone/keystone.conf.sample	2022-05-30 07:01:55.016379255 -0300
++++ /etc/keystone/keystone.conf	2022-05-30 07:50:14.820486765 -0300
+@@ -41,13 +41,13 @@
+ # is set by default. In larger deployments, it is recommended that you set this
+ # to a reasonable number to prevent operations like listing all users and
+ # projects from placing an unnecessary load on the system. (integer value)
+-#list_limit = <None>
++list_limit = 100
+ 
+ # If set to true, strict password length checking is performed for password
+ # manipulation. If a password exceeds the maximum length, the operation will
+ # fail with an HTTP 403 Forbidden error. If set to false, passwords are
+ # automatically truncated to the maximum length. (boolean value)
+-#strict_password_check = false
++strict_password_check = true
+ 
+ # If set to true, then the server will return information in HTTP responses
+ # that may allow an unauthenticated or authenticated user to get more
+@@ -663,7 +663,7 @@
+ # Deprecated group/name - [DEFAULT]/sql_connection
+ # Deprecated group/name - [DATABASE]/sql_connection
+ # Deprecated group/name - [sql]/connection
+-#connection = <None>
++connection = postgresql+psycopg2:///keystone
+ 
+ # The SQLAlchemy connection string to use to connect to the slave database.
+ # (string value)
