@@ -207,6 +207,12 @@ sudo reboot
 
 You can deconstruct the scripts and see what I did - I am aware I could have plucked all the files into a single tar file and extracted them together from `/`. That wasn't how it evolved, and here we are. I may make some .deb files in the future to do all this.
 
+### NVMe Instability
+
+This needs to go first, since it could cause problems at any time. After about a week of uptime, the software raid array fell over due to failures with the NVMe drives and APST.
+
+This problem can be eliminated by adding `nvme_core.default_ps_max_latency_us=0` to your grub command line to disable APST.
+
 ### Networking Setup
 
 I made some changes to the basic networking config in `/etc/default/networking`:
