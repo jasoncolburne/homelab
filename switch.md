@@ -205,7 +205,7 @@ sudo reboot
 ~/install/scripts/deploy-openstack-yoga.sh
 ```
 
-You can deconstruct the scripts and see what I did - I am aware I could have plucked all the files into a single tar file and extracted them together from `/`. That wasn't how it evolved, and here we are.
+You can deconstruct the scripts and see what I did - I am aware I could have plucked all the files into a single tar file and extracted them together from `/`. That wasn't how it evolved, and here we are. I may make some .deb files in the future to do all this.
 
 ### Networking Setup
 
