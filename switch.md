@@ -199,9 +199,11 @@ scp install.tgz username@remote_host:.
 # in KVM
 tar xzvf install.tgz
 ~/install/scripts/provision.sh
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
+echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 sudo reboot
 
-# from ssh session
+# from ssh session, after configuring powerlevel10k
 ~/install/scripts/deploy-openstack-yoga.sh
 ```
 
