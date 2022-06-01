@@ -2,8 +2,7 @@
 
 set -euxo pipefail
 
-OLD_PWD=$(pwd)
-
+sudo ~/install/scripts/install-dependencies/common.sh
 sudo ~/install/scripts/install-dependencies/$SERVICE.sh
 
 sudo mkdir -p \
@@ -241,5 +240,3 @@ sudo systemctl restart nginx
 
 sudo rm -rf /var/lib/$SERVICE/src
 sudo rm -rf /var/lib/$SERVICE/patch
-
-cd $OLD_PWD

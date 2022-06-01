@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-OLD_PWD=$(pwd)
-
+sudo systemctl stop nginx
 sudo systemctl stop uwsgi
 
 sudo rm -rf \
@@ -24,4 +23,5 @@ sudo -u postgres psql -q -c "DROP ROLE $SERVICE"
 
 sudo userdel $SERVICE
 
-cd $OLD_PWD
+sudo systemctl start uwsgi
+sudo systemctl start nginx

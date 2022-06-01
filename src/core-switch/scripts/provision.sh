@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-OLD_PWD=$(pwd)
-
 echo "removing cd-rom from apt sources"
 sudo cp ~/install/sources.list /etc/apt/
 echo "upgrading operating system"
@@ -19,7 +17,12 @@ sudo apt-get -y install \
 echo "installing optional packages"
 sudo apt-get -y install zsh git ripgrep && chsh -s $(which zsh) || true
 
-echo
+echo "removing open-iscsi"
+sudo apt-get -y remove open-iscsi
+audo apt-get -y autoremove
+
+echo "patching /etc/sysctl.conf to disable ipv6 and reserve keystone's admin port"
+sudo patch -i /etc/sysctl.conf < ~/patch/sysctl.conf.patch
 
 echo "deploying user config for $USER"
 cd ~
@@ -52,9 +55,4 @@ sudo apt install ./linux-image-sme-amd64_5.10.113-1_amd64.deb ./linux-image-5.10
 cd ~
 rm -rf 5.10.0-14-sme-amd64
 
-echo "disabling iscsi"
-sudo systemctl --now disable iscsid.service
-
 echo "to complete provisioning, reboot now."
-
-cd $OLD_PWD

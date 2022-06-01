@@ -2,8 +2,6 @@
 
 set -euo pipefail
 
-OLD_PWD=$(pwd)
-
 echo "ensure ~/ldap-admin-passphrase.txt and ~/ldap-admin-passphrase-verify.txt exist and match"
 if [[ ! -f ~/ldap-admin-passphrase.txt ]]; then
   echo "  ie:"
@@ -40,5 +38,3 @@ sudo ldapmodify -Y EXTERNAL -H ldapi:/// -f ~/install/ldap/disablecleartextbind.
 
 echo "restarting slapd"
 sudo systemctl restart slapd
-
-cd $OLD_PWD

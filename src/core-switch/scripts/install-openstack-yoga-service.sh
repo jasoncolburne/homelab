@@ -2,8 +2,6 @@
 
 set -euxo pipefail
 
-OLD_PWD=$(pwd)
-
 cd ~/src/$SERVICE
 git switch -c debian-bullseye
 
@@ -36,5 +34,3 @@ $SERVICE-manage bootstrap \
   --bootstrap-region-id region-one
 
 deactivate
-
-cd $OLD_PWD
