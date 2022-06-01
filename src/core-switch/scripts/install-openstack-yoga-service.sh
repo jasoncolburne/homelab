@@ -15,7 +15,7 @@ tox -e genpolicy
 cp -R etc/* /etc/$SERVICE
 patch -o /etc/$SERVICE/$SERVICE.conf /etc/$SERVICE/$SERVICE.conf.sample < ~/patch/$SERVICE.conf.patch
 
-python3 -m venv /var/lib/$SERVICE/venv
+[[ -d /var/lib/$SERVICE/venv ]] || python3 -m venv /var/lib/$SERVICE/venv
 . /var/lib/$SERVICE/venv/bin/activate
 
 pip install -r requirements.txt
@@ -30,10 +30,10 @@ $SERVICE-manage credential_setup
 # this is very keystone specific and will need to be abstracted
 $SERVICE-manage bootstrap \
   --bootstrap-password $SERVICE_ADMIN_PASSPHRASE \
-  --bootstrap-admin-url http://$(hostname):$SERVICE_PORT/v3/ \
-  --bootstrap-internal-url http://$(hostname):$SERVICE_PORT/v3/ \
-  --bootstrap-public-url http://$(hostname):$SERVICE_PORT/v3/ \
-  --bootstrap-region-id RegionOne
+  --bootstrap-admin-url https://$(hostname -f):$SERVICE_ADMIN_PORT/v3/ \
+  --bootstrap-internal-url https://$(hostname -f):$SERVICE_PORT/v3/ \
+  --bootstrap-public-url https://$(hostname -f):$SERVICE_PORT/v3/ \
+  --bootstrap-region-id region-one
 
 deactivate
 

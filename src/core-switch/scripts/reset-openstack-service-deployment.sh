@@ -8,7 +8,6 @@ sudo systemctl stop uwsgi
 
 sudo rm -rf \
   /etc/$SERVICE \
-  /var/lib/$SERVICE \
   /var/log/$SERVICE \
   /var/log/nginx/$SERVICE \
   /var/www/$SERVICE

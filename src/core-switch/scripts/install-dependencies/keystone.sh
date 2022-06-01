@@ -10,6 +10,7 @@ apt-get -y install \
   postgresql \
   libpq-dev \
   nginx \
+  openssl \
   uwsgi \
   uwsgi-plugin-python3 \
   libldap2-dev \

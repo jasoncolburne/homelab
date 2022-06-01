@@ -58,7 +58,7 @@ sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 
 if [[ $SERVICE_ADMIN_PORT != disabled ]]
 then
-  HOST=$(hostname)
+  HOST=$(hostname -f)
   SERVICE_ADMIN_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64)
   cat > ~/.openrc-admin << EOF
 export OS_PROJECT_DOMAIN_NAME=Default
@@ -66,7 +66,7 @@ export OS_USER_DOMAIN_NAME=Default
 export OS_PROJECT_NAME=admin
 export OS_USERNAME=admin
 export OS_PASSWORD=$SERVICE_ADMIN_PASSPHRASE
-export OS_AUTH_URL=http://$HOST:35357/v3
+export OS_AUTH_URL=https://$HOST:35357/v3
 export OS_IDENTITY_API_VERSION=3
 export OS_IMAGE_API_VERSION=2
 EOF
@@ -75,7 +75,12 @@ else
   SERVICE_ADMIN_PASSPHRASE=
 fi
 
-sudo -u $SERVICE SERVICE=$SERVICE SERVICE_PORT=$SERVICE_PORT SERVICE_ADMIN_PASSPHRASE=$SERVICE_ADMIN_PASSPHRASE ~/install/scripts/install-openstack-yoga-service.sh
+sudo -u $SERVICE \
+  SERVICE=$SERVICE \
+  SERVICE_PORT=$SERVICE_PORT \
+  SERVICE_ADMIN_PORT=$SERVICE_ADMIN_PORT \
+  SERVICE_ADMIN_PASSPHRASE=$SERVICE_ADMIN_PASSPHRASE \
+  ~/install/scripts/install-openstack-yoga-service.sh
 
 # prepare for uwsgi and nginx configuration
 
@@ -147,9 +152,28 @@ sudo systemctl restart uwsgi
 
 sudo bash -c "cat > /etc/nginx/sites-available/$SERVICE.conf" << EOF
 server {
-    listen      $SERVICE_PORT;
+    listen      $SERVICE_PORT ssl;
     access_log  /var/log/nginx/$SERVICE/access.log;
     error_log   /var/log/nginx/$SERVICE/error.log;
+
+    ssl_certificate     /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
+    ssl_ecdh_curve secp384r1;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+
+    ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE/socket;
@@ -160,9 +184,28 @@ EOF
 
 [[ $SERVICE_ADMIN_PORT == disabled ]] || sudo bash -c "cat >> /etc/nginx/sites-available/$SERVICE.conf" << EOF
 server {
-    listen      $SERVICE_ADMIN_PORT;
+    listen      $SERVICE_ADMIN_PORT ssl;
     access_log  /var/log/nginx/$SERVICE/access.log;
     error_log   /var/log/nginx/$SERVICE/error.log;
+
+    ssl_certificate     /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    ssl_protocols TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
+    ssl_ecdh_curve secp384r1;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+
+    ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE-admin/socket;
@@ -173,6 +216,24 @@ EOF
 
 sudo ln -s /etc/nginx/sites-{available,enabled}/$SERVICE.conf
 sudo sed -i "s/worker_processes auto/worker_processes 6/" /etc/nginx/nginx.conf
+
+[[ ! -f /etc/ssl/certs/dhparam.pem ]] && sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+if [[ ! -f /usr/local/bin/mkcert ]]
+then
+  sudo apt-get -y install libnss3-tools
+  curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
+  chmod +x mkcert-v*-linux-amd64
+  sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+  sudo mkcert --install
+fi
+
+if [[ ! -d /etc/nginx/ssl ]]
+then
+  sudo mkdir -p /etc/nginx/ssl
+  sudo mkcert -ecdsa $(hostname -f)
+  sudo mv core.homelab.pem /etc/nginx/ssl/cert.pem
+  sudo mv core.homelab-key.pem /etc/nginx/ssl/key.pem
+fi
 
 sudo systemctl restart nginx
 

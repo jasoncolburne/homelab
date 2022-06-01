@@ -10,14 +10,14 @@ echo "upgrading operating system"
 sudo apt update
 sudo apt upgrade
 echo "installing required packages"
-sudo apt -y install \
+sudo apt-get -y install \
   unzip \
   net-tools \
   bridge-utils \
 # clevis-tpm2 clevis-luks clevis-dracut
 
 echo "installing optional packages"
-sudo apt -y install zsh git ripgrep && chsh -s $(which zsh) || true
+sudo apt-get -y install zsh git ripgrep && chsh -s $(which zsh) || true
 
 echo
 
