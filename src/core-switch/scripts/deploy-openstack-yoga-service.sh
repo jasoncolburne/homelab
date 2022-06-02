@@ -18,7 +18,7 @@ mkdir -p ~/src/openstack
 cd ~/src/openstack
 [[ -d $SERVICE ]] || git clone https://opendev.org/openstack/$SERVICE.git -b stable/yoga
 
-sudo rm -rf /var/lib/$SERVICE/src/$SERVICE
+[[ $REBUILD == "1" ]] && sudo rm -rf /var/lib/$SERVICE/src/$SERVICE
 sudo cp -R ~/src/openstack/$SERVICE /var/lib/$SERVICE/src
 sudo cp -R ~/install/patch/$SERVICE* /var/lib/$SERVICE/patch
 
@@ -79,6 +79,7 @@ sudo -u $SERVICE \
   SERVICE_PORT=$SERVICE_PORT \
   SERVICE_ADMIN_PORT=$SERVICE_ADMIN_PORT \
   SERVICE_ADMIN_PASSPHRASE=$SERVICE_ADMIN_PASSPHRASE \
+  REBUILD=$REBUILD \
   ~/install/scripts/install-openstack-yoga-service.sh
 
 # prepare for uwsgi and nginx configuration
@@ -238,5 +239,5 @@ sudo systemctl restart nginx
 
 # cleanup
 
-sudo rm -rf /var/lib/$SERVICE/src
-sudo rm -rf /var/lib/$SERVICE/patch
+# sudo rm -rf /var/lib/$SERVICE/src
+# sudo rm -rf /var/lib/$SERVICE/patch

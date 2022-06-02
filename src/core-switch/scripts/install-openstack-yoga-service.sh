@@ -3,10 +3,10 @@
 set -euxo pipefail
 
 cd ~/src/$SERVICE
-git switch -c debian-bullseye
+git branch | rg debian-bullseye || git switch -c debian-bullseye
 
-tox -e genconfig
-tox -e genpolicy
+([[ ! -f etc/$SERVICE.conf.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genconfig
+([[ ! -f etc/$SERVICE.policy.yaml.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genpolicy
 # tox -e docs
 # tox -e protection
 
