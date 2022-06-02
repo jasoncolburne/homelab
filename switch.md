@@ -215,6 +215,43 @@ This needs to go first, since it could cause problems at any time. After about a
 
 This problem can be eliminated by adding `nvme_core.default_ps_max_latency_us=0` to your grub command line to disable APST.
 
+Edit: Unfortunately the problems persisted:
+
+```
+[ 1751.036859] {1}[Hardware Error]: Hardware error from APEI Generic Hardware Error Source: 4
+[ 1751.036929] {1}[Hardware Error]: event severity: info
+[ 1751.036963] {1}[Hardware Error]:  Error 0, type: fatal
+[ 1751.036994] {1}[Hardware Error]:  fru_text: PcieError
+[ 1751.037026] {1}[Hardware Error]:   section_type: PCIe error
+[ 1751.037078] {1}[Hardware Error]:   port_type: 4, root port
+[ 1751.037133] {1}[Hardware Error]:   version: 0.2
+[ 1751.037181] {1}[Hardware Error]:   command: 0x0407, status: 0x0010
+[ 1751.037242] {1}[Hardware Error]:   device_id: 0000:40:01.3
+[ 1751.037296] {1}[Hardware Error]:   slot: 34
+[ 1751.037339] {1}[Hardware Error]:   secondary_bus: 0x42
+[ 1751.037390] {1}[Hardware Error]:   vendor_id: 0x1022, device_id: 0x1453
+[ 1751.037455] {1}[Hardware Error]:   class_code: 060400
+[ 1751.037504] {1}[Hardware Error]:   bridge: secondary_status: 0x2000, control: 0x0012
+[ 1751.037577] {1}[Hardware Error]:   aer_uncor_status: 0x00000000, aer_uncor_mask: 0x04500000
+[ 1751.037656] {1}[Hardware Error]:   aer_uncor_severity: 0x004e2030
+[ 1751.037717] {1}[Hardware Error]:   TLP Header: 00000000 00000000 00000000 00000000
+[ 1751.040164] pcieport 0000:40:01.3: AER: aer_status: 0x00000000, aer_mask: 0x04500000
+[ 1751.040242] pcieport 0000:40:01.3: AER: aer_layer=Transaction Layer, aer_agent=Receiver ID
+[ 1751.040295] pcieport 0000:40:01.3: AER: aer_uncor_severity: 0x004e2030
+[ 1751.040340] nvme nvme1: frozen state error detected, reset controller
+[ 1752.124836] pcieport 0000:40:01.3: AER: Root Port link has been reset
+[ 1752.124951] pcieport 0000:40:01.3: AER: device recovery successful
+```
+
+Though the device recovered, the fact that it was encrypted raid made it less than usable:
+
+```
+❯ sudo umount /var
+umount: /var: target is busy.
+```
+
+I am now trying the setting `pcie_aspm=off` in addition to the other kernel flag.
+
 ### Networking Setup
 
 I made some changes to the basic networking config in `/etc/default/networking`:
