@@ -4,13 +4,16 @@
 
 Quantum gates are huge. I cache them in order to improve circuit build times. I need a lot of storage space.
 
+I also want to have a place to store musical recordings, code, and personal documents. I've lost data before and it's no fun. I've processed dead HDDs with `dd` to recover bits and pieces, and it's a garbage task.
+
 ## Parts
 - [Synology RS3621xs+](https://www.synology.com/en-ca/products/RS3621xs+)
 - [Synology RKS-02](https://www.synology.com/en-global/products/RKS-02)
 - 12x[4TB Seagate Exos 7E8 (ST4000NM002A)](https://www.seagate.com/ca/en/enterprise-storage/exos-drives/exos-e-drives/exos-7e8/)
 
-## Considered Upgrade
+## Planned Upgrades
 - 4x16gb Crucial 2666Mhz ECC UDIMM CL19 (CT16G4WFD8266)
+- Dual 10Gbe SFP+ Networking
 
 ## Assembly
 

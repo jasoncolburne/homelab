@@ -33,6 +33,11 @@ Don't forget to grab an anti-static wrist strap for this build, they are cheaply
 - IEC 320 90 Degree C13 3 Pin Female to C14 3 Pin Male PDU Adapter (this is a short 10A power cable)
 - [Arctic Silver 5](http://www.arcticsilver.com/as5.htm)
 
+## Planned Parts
+- [Thales Luna PCIe HSM](https://cpl.thalesgroup.com/encryption/hardware-security-modules/pcie-hsms)
+
+I feel like I need to explain this one for those who don't know. An HSM ([Hardware Security Module](https://en.wikipedia.org/wiki/Hardware_security_module)) provides [fail-secure](https://en.wikipedia.org/wiki/Fail-safe#Fail_safe_and_fail_secure) tamper-evident storage and cryptographic acceleration. When I worked with them in the past, I was able to provision the device with custom code to provide a security boundary for the most critical pieces of my applications. These units of code (in Eracom and Safenet terms) were called FMs (Functionality Modules). It's probably the same for Thales, but I'll see when I get engage them.
+
 ## Special Tools
 
 - T20 Torx Head
@@ -147,7 +152,7 @@ Now that we can access the BIOS, let's ensure that SVM and SMEE are enabled and 
 
 ![IOMMU](assets/switch/bios-iommu.jpg)
 
-One other annoying thing about the Startech cards is that the onboard ROM tries to do a network PXE boot for each nic, sequentially. This adds quite a bit of time to the boot process. To disable, navigate to the Boot/CSM menu and disable all the OpROMs. I left the M.2 ones on in this photo, but they shouldn't be necessary.
+One other annoying thing about the Startech cards is that the onboard ROM tries to do a network PXE boot for each nic, sequentially. This adds quite a bit of time to the boot process. To disable, navigate to the Boot/CSM menu and disable all the OpROMs. I left the M.2 ones on in this photo, but they weren't necessary.
 
 ![Disable PXE](assets/switch/bios-disable-pxe.jpg)
 
@@ -204,7 +209,7 @@ echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 sudo reboot
 
 # from ssh session, after configuring powerlevel10k
-~/install/scripts/deploy-openstack-yoga.sh
+~/install/scripts/openstack/yoga/deploy.sh
 ```
 
 You can deconstruct the scripts and see what I did - I am aware I could have plucked all the files into a single tar file and extracted them together from `/`. That wasn't how it evolved, and here we are. I may make some .deb files in the future to do all this.
@@ -419,6 +424,8 @@ iface veth0 inet dhcp
 ```
 
 The most important bits are the pre-up and post-down hooks in the bridge, they are responsible for creating the [veth](https://man7.org/linux/man-pages/man4/veth.4.html) pair that allows the host to access the network through the switch. Change the MAC address of the veth device to something a bit more sensible than `01:01:01:01:01:01`. I simply used the first random MAC the OS assigned, and fixed it to that so that my DHCP server can assign a static IP to the host.
+
+I plan to set up bonding on 2 10Gbe channels between the NAS and switch. Stay tuned for those modifications.
 
 After configuring the network, plug a cable in to any port, and restart networking:
 ```sh
@@ -646,7 +653,19 @@ To exit your VM, just run the command `sudo poweroff`.
 
 ### Secure, Password-less Boot
 
-As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Linux:_Full_Disk_Encryption&mobileaction=toggle_view_mobile) I realized my motherboard did not come with an embedded TPM, but instead one can optionally be added. When it arrives, I'll document how I set this up.
+As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Linux:_Full_Disk_Encryption&mobileaction=toggle_view_mobile) I realized my motherboard did not come with an embedded TPM, but instead one can optionally be added. When it arrives, I'll document how I set this up. My motherboard can do a sha-based secure boot, so that in combination with TPM-encrypted HDD keys provides a chain of trust as the system boots. Here is how it works:
+
+1. The BIOS is loaded into memory and the system POSTs and performs basic initialization.
+1. The BIOS checks a section of a designated HDD (your boot partition) and creates a SHA256 digest of this data.
+1. The BIOS compares this digest against one that the system adminstrator has previously configured.
+1. If the digests match, the bios hands control to the boot loader.
+1. The boot loader is configured to not accept command line input, and is configured to use the TPM to recover the keys for the other partitions (the encrypted keys will live on the boot partition with the kernel). If you want to get really hardcore, you can try to turn off module loading in the kernel and include your drivers etc in the kernel directly. I am not sure disabling module loading really buys us much, given the other lengths we are going to.
+1. The root filesystem keys are recovered and used to load the relevant parts of the OS into memory by the kernel.
+1. The kernel continues to run, but all partitions excluding boot are encrypted and impervious to observation. Since we have SME and Secure Virtualization enabled, we aren't worried about observation of memory. If the network ports are locked down and filesystem permissions are configured correctly, we should be good.
+
+Bonus (HSM):
+If we then needed to generate and store some more keys (or maybe even data) securely, an HSM is a much more versatile device than a TPM. A TPM can do a few things, but an HSM can do pretty much anything and comes with storage. The real benefit is in the fail-secure mode of operation. If someone tries to physically access/observe your keys, the HSM's hardware sensors instruct it to erase itself.
+
 
 ### Sanity check
 

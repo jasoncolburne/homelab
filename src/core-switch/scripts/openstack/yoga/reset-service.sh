@@ -16,7 +16,8 @@ sudo rm -f \
   /etc/nginx/sites-available/$SERVICE* \
   /etc/uwsgi/apps-enabled/$SERVICE* \
   /etc/uwsgi/apps-available/$SERVICE* \
-  /var/log/uwsgi/apps/$SERVICE*
+  /var/log/uwsgi/apps/$SERVICE* \
+  /var/lib/$SERVICE/images/*
 
 sudo -u postgres psql -q -c "DROP DATABASE $SERVICE"
 sudo -u postgres psql -q -c "DROP ROLE $SERVICE"
