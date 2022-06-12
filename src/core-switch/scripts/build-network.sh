@@ -132,8 +132,8 @@ ip netns exec ${NODE} ip route add 0.0.0.0/0 via ${NETWORK_IPV4_PREFIX}1
 
 # wire the api bridge to the external bridge
 ip link add ext-to-api type veth peer name api-to-ext
-ip link set dev ext-to-api master br-api
-ip link set dev api-to-ext master br-ext
+ip link set dev ext-to-api master br-ext
+ip link set dev api-to-ext master br-api
 ip addr add 192.168.50.252/24 dev ext-to-api
 ip addr add 192.168.50.253/24 dev api-to-ext
 ip link set dev ext-to-api up
