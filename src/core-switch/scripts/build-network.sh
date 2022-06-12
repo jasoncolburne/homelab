@@ -86,6 +86,25 @@ NET_ID=12
 COMP1_ID=13
 COMP2_ID=14
 
+# the above ids generate input for the last octet of the ip and virtual hardware
+# addresses associated with each node.
+#
+# for ips, the above value is taken as decimal and added to 200.
+# for example, every ip address on the dashboard node ends in 211.
+#
+# for hardware addresses, the above value is interpreted as hex and used directly.
+#
+# the reason for the hex/decimal discrepency is because the goal of this is to be
+# able to visually identify traffic.
+
+# the second last octet of the hardware address
+# corresponds to the following network mapping:
+#
+# ext - 01
+# mgmt - 02
+# api - 04
+# data - 08
+
 NETWORK_NAME=mgmt
 NETWORK_IPV4_PREFIX=10.0.2.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:02:
