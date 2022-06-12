@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
-set -euxo pipefail
+if [[ "$DEBUG" == "1" ]]
+then
+  set -euxo pipefail
+else
+  set -euo pipefail
+fi
 
 sudo ~/install/scripts/openstack/yoga/dependencies/common.sh
 [[ -f ~/install/scripts/openstack/yoga/dependencies/$SERVICE.sh ]] && sudo ~/install/scripts/openstack/yoga/dependencies/$SERVICE.sh
@@ -20,7 +25,7 @@ cd ~/src/openstack
 
 [[ $REBUILD == "1" ]] && sudo rm -rf /var/lib/$SERVICE/src/$SERVICE
 sudo cp -R ~/src/openstack/$SERVICE /var/lib/$SERVICE/src
-[[ -f ~/install/patch/$SERVICE-api.conf.patch ]] && sudo cp ~/install/patch/$SERVICE-api.conf.patch /var/lib/$SERVICE/patch
+sudo cp ~/install/patch/$SERVICE*.conf.patch /var/lib/$SERVICE/patch || true
 
 # this is actually flawed but we won't see a problem
 if rg -qF $SERVICE /etc/passwd
@@ -56,14 +61,19 @@ sudo chown -R $SERVICE:$SERVICE /var/lib/$SERVICE
 sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 
 HOST=$(hostname -f)
-SERVICE_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
+if [[ "$SERVICE" == "placement" ]]
+then
+  SERVICE_PASSPHRASE=$PLACEMENT_PASSPHRASE
+else
+  SERVICE_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
+fi
 . ~/.openrc-admin
-openstack user create --domain default glance --password "$SERVICE_PASSPHRASE"
+openstack user create --domain default $SERVICE --password=$SERVICE_PASSPHRASE
 openstack role add --project service --user $SERVICE admin
-openstack service create --name $SERVICE --description "$DESCRIPTION" image
-openstack endpoint create --region $REGION image public https://$HOST:$SERVICE_PORT
-openstack endpoint create --region $REGION image internal https://$HOST:$SERVICE_PORT
-openstack endpoint create --region $REGION image admin https://$HOST:$SERVICE_PORT
+openstack service create --name $SERVICE --description "$DESCRIPTION" $SERVICE_TYPE
+openstack endpoint create --region $REGION $SERVICE_TYPE public https://$HOST:$SERVICE_PORT
+openstack endpoint create --region $REGION $SERVICE_TYPE internal https://$HOST:$SERVICE_PORT
+openstack endpoint create --region $REGION $SERVICE_TYPE admin https://$HOST:$SERVICE_PORT
 
 # set up quotas
 # Be sure to also set use_keystone_quotas=True in your $SERVICE-api.conf file.
@@ -76,7 +86,9 @@ sudo -u $SERVICE \
   SERVICE=$SERVICE \
   SERVICE_PORT=$SERVICE_PORT \
   SERVICE_PASSPHRASE=$SERVICE_PASSPHRASE \
+  KEYSTONE_HOST=$KEYSTONE_HOST \
   KEYSTONE_PORT=$KEYSTONE_PORT \
+  MEMCACHE_PORT=$MEMCACHE_PORT \
   REBUILD=$REBUILD \
   ~/install/scripts/openstack/yoga/install-api-service.sh
 
@@ -84,7 +96,7 @@ unset SERVICE_PASSPHRASE
 
 # prepare for uwsgi and nginx configuration
 
-sudo usermod -G www-data $SERVICE
+sudo usermod -G $SERVICE,www-data $SERVICE
 
 sudo systemctl stop nginx
 sudo rm -f /etc/nginx/sites-enabled/default
@@ -97,6 +109,7 @@ sudo mkdir /var/www/$SERVICE
 
 sudo bash -c "cat > /etc/uwsgi/apps-available/$SERVICE.ini" << EOF
 [uwsgi]
+env = REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 master = true
 plugin = python3
 thunder-lock = true
@@ -111,7 +124,7 @@ gid = www-data
 
 chdir = /var/www/$SERVICE/
 virtualenv = /var/lib/$SERVICE/venv
-wsgi-file = /var/lib/$SERVICE/venv/bin/$SERVICE-wsgi-api
+wsgi-file = /var/lib/$SERVICE/venv/bin/$WSGI_SCRIPT
 
 no-orphans = true
 vacuum = true
@@ -175,8 +188,8 @@ if [[ ! -d /etc/nginx/ssl ]]
 then
   sudo mkdir -p /etc/nginx/ssl
   sudo mkcert -ecdsa $HOST
-  sudo mv core.homelab.pem /etc/nginx/ssl/cert.pem
-  sudo mv core.homelab-key.pem /etc/nginx/ssl/key.pem
+  sudo mv $HOST.pem /etc/nginx/ssl/cert.pem
+  sudo mv $HOST-key.pem /etc/nginx/ssl/key.pem
 fi
 
 sudo systemctl restart nginx

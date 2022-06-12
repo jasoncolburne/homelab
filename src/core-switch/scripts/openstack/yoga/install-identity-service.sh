@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
-set -euxo pipefail
+if [[ "$DEBUG" == "1" ]]
+then
+  set -euxo pipefail
+else
+  set -euo pipefail
+fi
 
 cd ~/src/$SERVICE
 git branch | rg debian-bullseye || git switch -c debian-bullseye
@@ -27,7 +32,7 @@ $SERVICE-manage credential_setup
 
 # this is very keystone specific and will need to be abstracted
 $SERVICE-manage bootstrap \
-  --bootstrap-password "$SERVICE_ADMIN_PASSPHRASE" \
+  --bootstrap-password=$SERVICE_ADMIN_PASSPHRASE \
   --bootstrap-admin-url https://$(hostname -f):$SERVICE_ADMIN_PORT/v3/ \
   --bootstrap-internal-url https://$(hostname -f):$SERVICE_PORT/v3/ \
   --bootstrap-public-url https://$(hostname -f):$SERVICE_PORT/v3/ \

@@ -1,0 +1,197 @@
+--- /etc/neutron/neutron.conf.sample	2022-06-06 17:57:26.783919473 -0300
++++ /etc/neutron/neutron.conf	2022-06-06 19:34:08.010837995 -0300
+@@ -24,13 +24,13 @@
+ #api_extensions_path =
+ 
+ # The type of authentication to use (string value)
+-#auth_strategy = keystone
++auth_strategy = keystone
+ 
+ # The core plugin Neutron will use (string value)
+-#core_plugin = <None>
++core_plugin = ml2
+ 
+ # The service plugins Neutron will use (list value)
+-#service_plugins =
++service_plugins = router
+ 
+ # The base MAC address Neutron will use for VIFs. The first 3 octets will
+ # remain unchanged. If the 4th octet is not 00, it will also be used. The
+@@ -101,11 +101,11 @@
+ #network_link_prefix = <None>
+ 
+ # Send notification to nova when port status changes (boolean value)
+-#notify_nova_on_port_status_changes = true
++notify_nova_on_port_status_changes = true
+ 
+ # Send notification to nova when port data (fixed_ips/floatingip) changes so
+ # nova can update its cache. (boolean value)
+-#notify_nova_on_port_data_changes = true
++notify_nova_on_port_data_changes = true
+ 
+ # Number of seconds between sending events to nova if there are any events to
+ # send. (integer value)
+@@ -514,7 +514,7 @@
+ # oslo_messaging.TransportURL at
+ # https://docs.openstack.org/oslo.messaging/latest/reference/transport.html
+ # (string value)
+-#transport_url = rabbit://
++transport_url = rabbit://openstack:SERVICE_INSTALL_RABBIT_PASSPHRASE@SERVICE_INSTALL_RABBIT_HOST:SERVICE_INSTALL_RABBIT_PORT/
+ 
+ # The default exchange under which topics are scoped. May be overridden by an
+ # exchange name specified in the transport_url option. (string value)
+@@ -607,7 +607,7 @@
+ # /etc/neutron/rootwrap.conf' to use the real root filter facility. Change to
+ # 'sudo' to skip the filtering and just run the command directly. (string
+ # value)
+-#root_helper = sudo
++root_helper = sudo /var/lib/neutron/venv/bin/neutron-rootwrap /etc/neutron/rootwrap.conf
+
+ # Use the root helper when listing the namespaces on a system. This may not be
+ # required depending on the security configuration. If the root helper is not
+@@ -886,7 +886,7 @@
+ # Deprecated group/name - [DEFAULT]/sql_connection
+ # Deprecated group/name - [DATABASE]/sql_connection
+ # Deprecated group/name - [sql]/connection
+-#connection = <None>
++connection = postgresql+psycopg2:///neutron
+ 
+ # The SQLAlchemy connection string to use to connect to the slave database.
+ # (string value)
+@@ -1114,7 +1114,7 @@
+ # because normal end users may not be able to reach that endpoint. (string
+ # value)
+ # Deprecated group/name - [keystone_authtoken]/auth_uri
+-#www_authenticate_uri = <None>
++www_authenticate_uri = https://SERVICE_INSTALL_KEYSTONE_HOST:SERVICE_INSTALL_KEYSTONE_PORT
+ 
+ # DEPRECATED: Complete "public" Identity API endpoint. This endpoint should not
+ # be an "admin" endpoint, as it should be accessible by all end users.
+@@ -1129,7 +1129,7 @@
+ # Its value may be silently ignored in the future.
+ # Reason: The auth_uri option is deprecated in favor of www_authenticate_uri
+ # and will be removed in the S  release.
+-#auth_uri = <None>
++auth_url = https://SERVICE_INSTALL_KEYSTONE_HOST:SERVICE_INSTALL_KEYSTONE_PORT
+ 
+ # API version of the Identity API endpoint. (string value)
+ #auth_version = <None>
+@@ -1175,7 +1175,7 @@
+ # Optionally specify a list of memcached server(s) to use for caching. If left
+ # undefined, tokens will instead be cached in-process. (list value)
+ # Deprecated group/name - [keystone_authtoken]/memcache_servers
+-#memcached_servers = <None>
++memcached_servers = SERVICE_INSTALL_KEYSTONE_HOST:SERVICE_INSTALL_MEMCACHE_PORT
+ 
+ # In order to prevent excessive effort spent validating tokens, the middleware
+ # caches previously-seen tokens for a configurable duration (in seconds). Set
+@@ -1247,7 +1247,7 @@
+ # that don't pass the service_token_roles check as valid. Setting this true
+ # will become the default in a future release and should be enabled if
+ # possible. (boolean value)
+-#service_token_roles_required = false
++service_token_roles_required = true
+
+ # The name or type of the service as it appears in the service catalog. This is
+ # used to validate tokens that have restricted access rules. (string value)
+@@ -1255,11 +1255,16 @@
+ 
+ # Authentication type to load (string value)
+ # Deprecated group/name - [keystone_authtoken]/auth_plugin
+-#auth_type = <None>
++auth_type = password
+ 
+ # Config Section from which to load plugin specific options (string value)
+ #auth_section = <None>
+ 
++project_domain_name = Default
++user_domain_name = Default
++project_name = service
++username = neutron
++password = SERVICE_INSTALL_SERVICE_PASSPHRASE
+ 
+ [nova]
+ 
+@@ -1269,7 +1274,7 @@
+ 
+ # Name of nova region to use. Useful if keystone manages more than one region.
+ # (string value)
+-#region_name = <None>
++region_name = SERVICE_INSTALL_REGION
+ 
+ # Type of the nova endpoint to use.  This endpoint will be looked up in the
+ # keystone catalog and should be one of public, internal or admin. (string
+@@ -1299,11 +1304,11 @@
+ #
+ 
+ # Authentication URL (string value)
+-#auth_url = <None>
++auth_url = https://SERVICE_INSTALL_KEYSTONE_HOST:SERVICE_INSTALL_KEYSTONE_PORT/
+ 
+ # Authentication type to load (string value)
+ # Deprecated group/name - [nova]/auth_plugin
+-#auth_type = <None>
++auth_type = password
+ 
+ # PEM encoded Certificate Authority to use when verifying HTTPs connections.
+ # (string value)
+@@ -1338,13 +1343,13 @@
+ #keyfile = <None>
+ 
+ # User's password (string value)
+-#password = <None>
++password = SERVICE_INSTALL_NOVA_PASSPHRASE
+ 
+ # Domain ID containing project (string value)
+ #project_domain_id = <None>
+ 
+ # Domain name containing project (string value)
+-#project_domain_name = <None>
++project_domain_name = default
+ 
+ # Project ID to scope to (string value)
+ # Deprecated group/name - [nova]/tenant_id
+@@ -1352,7 +1357,7 @@
+ 
+ # Project name to scope to (string value)
+ # Deprecated group/name - [nova]/tenant_name
+-#project_name = <None>
++project_name = service
+ 
+ # Log requests to multiple loggers. (boolean value)
+ #split_loggers = false
+@@ -1376,14 +1381,14 @@
+ #user_domain_id = <None>
+ 
+ # User's domain name (string value)
+-#user_domain_name = <None>
++user_domain_name = default
+ 
+ # User id (string value)
+ #user_id = <None>
+ 
+ # Username (string value)
+ # Deprecated group/name - [nova]/user_name
+-#username = <None>
++username = nova
+ 
+ 
+ [oslo_concurrency]
+@@ -1399,7 +1404,7 @@
+ # should only be writable by the user running the processes that need locking.
+ # Defaults to environment variable OSLO_LOCK_PATH. If external locks are used,
+ # a lock path must be set. (string value)
+-#lock_path = <None>
++lock_path = /var/lib/neutron/tmp
+ 
+ 
+ [oslo_messaging_amqp]
+@@ -2065,7 +2070,7 @@
+ # arguments designed to recreate the current configuration. This command must
+ # accept suitable --privsep_context and --privsep_sock_path arguments. (string
+ # value)
+-#helper_command = <None>
++helper_command = sudo /var/lib/neutron/venv/bin/neutron-rootwrap /etc/neutron/rootwrap.conf /var/lib/neutron/venv/bin/privsep-helper
+
+ # Logger name to use for this privsep context.  By default all contexts log
+ # with oslo_privsep.daemon. (string value)

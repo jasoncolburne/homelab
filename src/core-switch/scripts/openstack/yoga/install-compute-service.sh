@@ -17,20 +17,15 @@ else
   SOURCE_CONFIG_PATH=etc
 fi
 
-( ([[ ! -f $SOURCE_CONFIG_PATH/$SERVICE.conf.sample ]] && [[ ! -f $SOURCE_CONFIG_PATH/$SERVICE-api.conf.sample ]]) || [[ $REBUILD == "1" ]] ) && tox -e genconfig
+([[ ! -f $SOURCE_CONFIG_PATH/$SERVICE.conf.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genconfig
 ([[ ! -f $SOURCE_CONFIG_PATH/policy.yaml.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genpolicy
 # tox -e docs
 # tox -e protection
 
 cp -R $SOURCE_CONFIG_PATH/* /etc/$SERVICE
+MAIN_CONFIG_FILE_NAME=$SERVICE.conf
 
-if [[ -f /etc/$SERVICE/$SERVICE-api.conf.sample ]]
-then
-  MAIN_CONFIG_FILE_NAME=$SERVICE-api.conf
-else
-  MAIN_CONFIG_FILE_NAME=$SERVICE.conf
-fi
-
+HOST_IP=$(hostname -I | awk '{print $1}')
 if [[ -f ~/patch/$MAIN_CONFIG_FILE_NAME.patch ]]
 then
   patch -o /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME.sample < ~/patch/$MAIN_CONFIG_FILE_NAME.patch
@@ -38,6 +33,14 @@ then
   sed -i "s/SERVICE_INSTALL_KEYSTONE_PORT/$KEYSTONE_PORT/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
   sed -i "s/SERVICE_INSTALL_MEMCACHE_PORT/$MEMCACHE_PORT/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
   sed -i "s/SERVICE_INSTALL_SERVICE_PASSPHRASE/$SERVICE_PASSPHRASE/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_RABBIT_PASSPHRASE/$RABBIT_OPENSTACK_PASSPHRASE/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_RABBIT_HOST/$RABBIT_HOST/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_RABBIT_PORT/$RABBIT_PORT/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_HOST_IP/$HOST_IP/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_REGION/$REGION/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_PLACEMENT_PASSPHRASE/$PLACEMENT_PASSPHRASE/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_NEUTRON_PASSPHRASE/$NEUTRON_PASSPHRASE/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
+  sed -i "s/SERVICE_INSTALL_METADATA_SECRET/$METADATA_SECRET/g" /etc/$SERVICE/$MAIN_CONFIG_FILE_NAME
 fi
 
 [[ -f /var/lib/$SERVICE/venv/bin/activate ]] || python3 -m venv /var/lib/$SERVICE/venv
@@ -45,9 +48,12 @@ fi
 
 pip install -r requirements.txt
 # requirements for our setup
-pip install psycopg2 python-memcached
+pip install psycopg2 python-memcached libvirt-python
 python3 setup.py install
 
-$SERVICE-manage db_sync || $SERVICE-manage db sync
+$SERVICE-manage api_db sync
+$SERVICE-manage cell_v2 map_cell0
+$SERVICE-manage cell_v2 create_cell --name=cell1 --verbose
+$SERVICE-manage db sync
 
 deactivate
