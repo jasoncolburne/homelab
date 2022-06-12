@@ -26,9 +26,9 @@ NODES=(net)
 cleanup_network ext
 NODES=(ctrl dash)
 cleanup_network api
-NODES=(net comp)
+NODES=(net comp1 comp2)
 cleanup_network data
-NODES=(ctrl net comp dash)
+NODES=(ctrl dash net comp1 comp2)
 cleanup_network mgmt
 
 for NODE in "${NODES[@]}"
