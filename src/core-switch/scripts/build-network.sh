@@ -45,7 +45,7 @@ create_virtual_network() {
   done
 
   # assign ips
-  if [[ "${FORCED_BRIDGE_IP}" == "" ]]
+  if [[ -z "${FORCED_BRIDGE_IP}" ]]
   then
     BRIDGE_IP=${NETWORK_IPV4_PREFIX}1
   else
