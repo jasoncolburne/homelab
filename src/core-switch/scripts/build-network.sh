@@ -91,6 +91,8 @@ COMP2_ID=14
 #
 # for ips, the above value is taken as decimal and added to 200.
 # for example, every ip address on the dashboard node ends in 211.
+# i did this because my external network's dhcp server's address range
+# is capped somewhere around 175 by my choice
 #
 # for hardware addresses, the above value is interpreted as hex and used directly.
 #
