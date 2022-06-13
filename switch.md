@@ -257,6 +257,9 @@ umount: /var: target is busy.
 
 I am now trying the setting `pcie_aspm=off` in addition to the other kernel flag.
 
+Edit: Since making the above change to the `pcie_aspm` flag, I have had an uptime of over
+10 days. I'll make another edit if things break down again, but it looks like this resolved the issue.
+
 ### Networking Setup
 
 I made some changes to the basic networking config in `/etc/default/networking`:
