@@ -172,7 +172,7 @@ Configure the filesystem as you like. Here is what I did:
 
 ![Encrypted File System Configuration](assets/switch/debian-install-filesystems-encrypted.jpg)
 
-I left the `/boot` partition in the clear, and encrypted everything else. I used passphrases to create the encrypted partitions (there seems to be a problem formatting the encrypted devices with anything but `ext2` if you choose `random key`), and this means that at first I'll need to enter them through the KVM every time the system boots. I plan to perform the derivation process manually to grab the keys used for encryption, encrypt them with the TPM on the motherboard, and manage the keys during the boot process. I hope to also be able to use the TPM to verify the integrity of the boot partition before handing control to the boot loader. To do this securely, I'll need to disallow custom booting in grub (configure it such that only a single kernel boots with fixed parameters). I should be able to automate loading the OS this way.
+I left the `/boot` partition in the clear, and encrypted everything else. In my final deployment, I only allocated 250mb to the /boot partition as it is unlikely I'll need more. I used passphrases to create the encrypted partitions (there seems to be a problem formatting the encrypted devices with anything but `ext2` if you choose `random key`), and this means that at first I'll need to enter them through the KVM every time the system boots. I plan to perform the derivation process manually to grab the keys used for encryption, encrypt them with the TPM on the motherboard, and manage the keys during the boot process. I hope to also be able to use the TPM to verify the integrity of the boot partition before handing control to the boot loader. To do this securely, I'll need to disallow custom booting in grub (configure it such that only a single kernel boots with fixed parameters). I should be able to automate loading the OS this way.
 
 This way, in the worst case I can derive the keys again.
 
@@ -670,8 +670,14 @@ Bonus (HSM):
 If we then needed to generate and store some more keys (or maybe even data) securely, an HSM is a much more versatile device than a TPM. A TPM can do a few things, but an HSM can do pretty much anything and comes with storage. The real benefit is in the fail-secure mode of operation. If someone tries to physically access/observe your keys, the HSM's hardware sensors instruct it to erase itself.
 
 The TPM itself:
+
 ![TPM](assets/switch/tpm.jpg)
 
+After installation, check that it is recognized in the BIOS and it's best to perform the clear action (which I can only presume generates new keying material). I imagine the kdf the chip uses internally incorporates the cpu id to lock the TPM to the CPU, so this may be unnecessary, but it's better to be safe.
+
+![TPM in BIOS](assets/switch/tpm-bios.jpg)
+
+At this point, I tried a reinstallation of the entire system to see if the `random key` option during filesystem provisioning would work out of the box and use the TPM. It did not, and again constrained me to ext2 if I selected `random key`. I chose to again use passphrases, which I will convert to keys and encrypt using the TPM. These encrypted keys can be used during boot instead of having to type passphrases in.
 
 ### Sanity check
 
