@@ -656,7 +656,7 @@ To exit your VM, just run the command `sudo poweroff`.
 
 ### Secure, Password-less Boot
 
-As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Linux:_Full_Disk_Encryption&mobileaction=toggle_view_mobile) I realized my motherboard did not come with an embedded TPM, but instead one can optionally be added. When it arrives, I'll document how I set this up. My motherboard can do a sha-based secure boot, so that in combination with TPM-encrypted HDD keys provides a chain of trust as the system boots. Here is how it works:
+As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Linux:_Full_Disk_Encryption&mobileaction=toggle_view_mobile) I realized my motherboard did not come with an embedded TPM, but instead one can optionally be added. My motherboard can do a sha-based secure boot, so that in combination with TPM-encrypted HDD keys, it provides a chain of trust as the system boots. Here is how it works:
 
 1. The BIOS is loaded into memory and the system POSTs and performs basic initialization.
 1. The BIOS checks a section of a designated HDD (your boot partition) and creates a SHA256 digest of this data.
@@ -664,10 +664,13 @@ As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Li
 1. If the digests match, the bios hands control to the boot loader.
 1. The boot loader is configured to not accept command line input, and is configured to use the TPM to recover the keys for the other partitions (the encrypted keys will live on the boot partition with the kernel). If you want to get really hardcore, you can try to turn off module loading in the kernel and include your drivers etc in the kernel directly. I am not sure disabling module loading really buys us much, given the other lengths we are going to.
 1. The root filesystem keys are recovered and used to load the relevant parts of the OS into memory by the kernel.
-1. The kernel continues to run, but all partitions excluding boot are encrypted and impervious to observation. Since we have SME and Secure Virtualization enabled, we aren't worried about observation of memory. If the network ports are locked down and filesystem permissions are configured correctly, we should be good.
+1. The kernel continues to run, but all partitions excluding boot are encrypted and impervious to observation. Since we have SME and Secure Virtualization enabled, we aren't worried about observation of memory. If the network ports are locked down and filesystem permissions are configured correctly, we should be in as good a position as we can be.
 
 Bonus (HSM):
 If we then needed to generate and store some more keys (or maybe even data) securely, an HSM is a much more versatile device than a TPM. A TPM can do a few things, but an HSM can do pretty much anything and comes with storage. The real benefit is in the fail-secure mode of operation. If someone tries to physically access/observe your keys, the HSM's hardware sensors instruct it to erase itself.
+
+The TPM itself:
+![TPM](assets/switch/tpm.jpg)
 
 
 ### Sanity check

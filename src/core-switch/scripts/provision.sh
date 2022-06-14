@@ -14,15 +14,15 @@ sudo apt-get -y install \
   bridge-utils \
 # clevis-tpm2 clevis-luks clevis-dracut
 
-echo "installing optional packages"
-sudo apt-get -y install zsh git ripgrep && chsh -s $(which zsh) || true
+# echo "installing optional packages"
+# sudo apt-get -y install zsh git ripgrep && chsh -s $(which zsh) || true
 
 echo "removing open-iscsi"
 sudo apt-get -y remove open-iscsi
-audo apt-get -y autoremove
+sudo apt-get -y autoremove
 
-echo "patching /etc/sysctl.conf to disable ipv6 and reserve keystone's admin port"
-sudo patch -i /etc/sysctl.conf < ~/patch/sysctl.conf.patch
+# echo "patching /etc/sysctl.conf to disable ipv6 and reserve keystone's admin port"
+# sudo patch -i /etc/sysctl.conf < ~/install/patch/sysctl.conf.patch
 
 echo "deploying user config for $USER"
 cd ~
@@ -31,6 +31,7 @@ unzip install/ssh.zip
 echo "deploying system config"
 cd /
 
+echo "bringing down networking"
 sudo systemctl stop networking
 echo "installing amd firmware"
 sudo unzip ~/install/amd.zip
@@ -40,6 +41,7 @@ echo "deploying new sshd configuration"
 sudo unzip -o ~/install/sshd.zip
 echo "deploying new grub configuration"
 sudo unzip -o ~/install/grub.zip
+echo "bringing up networking"
 sudo systemctl start networking
 echo "updating boot images"
 sudo update-initramfs -c -k all
