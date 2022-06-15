@@ -691,6 +691,15 @@ sudo dracut -f --regenerate-all
 
 Reboot and watch while your password prompts are bypassed...
 
+For some reason, `dracut` didn't copy one of the SEV firmware files into the initrd images. I had to create this file:
+
+/etc/dracut.conf.d/20-sev.conf
+```
+install_items+=" /lib/firmware/amd/amd_sev_fam17h_model01h.sbin "
+```
+
+Then I needed to run the dracut command again.
+
 ### Sanity check
 
 At some point I ran some tests using `sysbench`, and tried out my Quantum Computer simulator, attempting to build a complex 15-[qubit](https://en.wikipedia.org/wiki/Qubit) circuit. Each gate in such a circuit is ~16gb when using 64 bit precision. Shortly after I took this photo, the simulator blew up due to a lack of memory. I plan to refactor the way in which the circuit is built, and type the simulator to allow 32 bit precision as an option.
