@@ -679,6 +679,18 @@ After installation, check that it is recognized in the BIOS and it's best to per
 
 At this point, I tried a reinstallation of the entire system to see if the `random key` option during filesystem provisioning would work out of the box and use the TPM. It did not, and again constrained me to ext2 if I selected `random key`. I chose to again use passphrases, which I will convert to keys and encrypt using the TPM. These encrypted keys can be used during boot instead of having to type passphrases in.
 
+This turned out to be easier than expected.
+
+```
+sudo apt install clevis-tpm2 clevis-luks clevis-dracut
+sudo clevis luks bind -d /dev/sda2 tpm2 '{"pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo clevis luks bind -d /dev/sda3 tpm2 '{"pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo clevis luks bind -d /dev/md0 tpm2 '{"pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo dracut -f --regenerate-all
+```
+
+Reboot and watch while your password prompts are bypassed...
+
 ### Sanity check
 
 At some point I ran some tests using `sysbench`, and tried out my Quantum Computer simulator, attempting to build a complex 15-[qubit](https://en.wikipedia.org/wiki/Qubit) circuit. Each gate in such a circuit is ~16gb when using 64 bit precision. Shortly after I took this photo, the simulator blew up due to a lack of memory. I plan to refactor the way in which the circuit is built, and type the simulator to allow 32 bit precision as an option.

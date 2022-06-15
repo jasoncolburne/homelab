@@ -12,7 +12,9 @@ sudo apt-get -y install \
   unzip \
   net-tools \
   bridge-utils \
-# clevis-tpm2 clevis-luks clevis-dracut
+  clevis-tpm2 \
+  clevis-luks \
+  clevis-dracut
 
 # echo "installing optional packages"
 # sudo apt-get -y install zsh git ripgrep && chsh -s $(which zsh) || true
