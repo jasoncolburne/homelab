@@ -184,7 +184,7 @@ I selected minimal packages:
 It's nice to not have to constantly type your password when you are setting up a server. This is your choice, I find it helpful. You can remove it after configuration is complete, if you are worried.
 
 ```sh
-sudo visudo
+sudo visudo -f /etc/sudoers.d/10-default
 ```
 
 Add the following line (substituting your username):
@@ -196,7 +196,7 @@ For convenience, I rolled this process up into some [scripts](src/core-switch/sc
 
 ```
 # in KVM
-sudo visudo # update to nopasswd
+sudo visudo -f /etc/sudoers.d/10-default # update to nopasswd
 
 # from local
 scp install.tgz username@remote_host:.
@@ -204,11 +204,9 @@ scp install.tgz username@remote_host:.
 # in KVM
 tar xzvf install.tgz
 ~/install/scripts/provision.sh
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
-echo 'source ~/powerlevel10k/powerlevel10k.zsh-theme' >> ~/.zshrc
 sudo reboot
 
-# from ssh session, after configuring powerlevel10k
+# from ssh session
 ~/install/scripts/openstack/yoga/deploy.sh
 ```
 
@@ -265,17 +263,8 @@ Edit: Since making the above change to the `pcie_aspm` flag, I have had an uptim
 I made some changes to the basic networking config in `/etc/default/networking`:
 
 ```
-...
-
-# Set to 'yes' to enable additional verbosity
-VERBOSE=yes
-
-...
-
-# Timeout in seconds for waiting for the network to come online.
-WAIT_ONLINE_TIMEOUT=30
-
-...
+WAIT_ONLINE_METHOD=route
+WAIT_ONLINE_IFACE=veth0
 ```
 
 And here is how I configured the switch in `/etc/network/interfaces`:
@@ -296,23 +285,23 @@ iface lo inet loopback
 
 allow-hotplug enp98s0f0
 iface enp98s0f0 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp98s0f1
 iface enp98s0f1 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp98s0f2
 iface enp97s0f2 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp98s0f3
 iface enp98s0f3 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 ########################
 # HD Side I350 (1Gbe)
@@ -320,23 +309,23 @@ iface enp98s0f3 inet manual
 
 allow-hotplug enp34s0f0
 iface enp34s0f0 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp34s0f1
 iface enp34s0f1 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp34s0f2
 iface enp34s0f2 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp34s0f3
 iface enp34s0f3 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 ########################
 # CPU Side X550T (10Gbe)
@@ -344,13 +333,13 @@ iface enp34s0f3 inet manual
 
 allow-hotplug enp33s0f0
 iface enp33s0f0 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp33s0f1
 iface enp33s0f1 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 ########################
 # HD Side X550T (10Gbe)
@@ -358,13 +347,13 @@ iface enp33s0f1 inet manual
 
 allow-hotplug enp1s0f0
 iface enp1s0f0 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp1s0f1
 iface enp1s0f1 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 ########################
 # Onboard X550T (10Gbe)
@@ -372,13 +361,13 @@ iface enp1s0f1 inet manual
 
 allow-hotplug enp99s0f0
 iface enp99s0f0 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp99s0f1
 iface enp99s0f1 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 ########################
 # X710 (10Gbe SFP+)
@@ -386,36 +375,35 @@ iface enp99s0f1 inet manual
 
 allow-hotplug enp97s0f0
 iface enp97s0f0 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp97s0f1
 iface enp97s0f1 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp97s0f2
 iface enp97s0f2 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 allow-hotplug enp97s0f3
 iface enp97s0f3 inet manual
-  pre-up   ifconfig $IFACE up
-  pre-down ifconfig $IFACE down
+  pre-up   ip link set dev $IFACE up
+  pre-down ip link set dev $IFACE down
 
 ######################
 # Bridge
 ######################
 
-auto br0
-iface br0 inet static
-  bridge_ports enp1s0f0 enp1s0f1 enp33s0f0 enp33s0f1 enp34s0f0 enp34s0f1 enp34s0f2 enp34s0f3 enp97s0f0 enp97s0f1 enp97s0f2 enp97s0f3 enp98s0f0 enp98s0f1 enp98s0f2 enp98s0f3 enp99s0f0 enp99s0f1 veth0-peer
+auto br-ext
+iface br-ext inet static
+  bridge_ports enp1s0f0 enp1s0f1 enp33s0f0 enp33s0f1 enp34s0f0 enp34s0f1 enp34s0f2 enp34s0f3 enp97s0f0 enp97s0f1 enp97s0f2 enp97s0f3 enp98s0f0 enp98s0f1 enp98s0f2 enp98s0f3 enp99s0f0 enp99s0f1 veth0-p
   address 192.168.1.250
   netmask 255.255.255.0
-  pre-up ip link add veth0 type veth peer name veth0-peer && ifconfig veth0 hw ether 01:01:01:01:01:01
-  up /usr/sbin/brctl stp br0 on
-  post-up sysctl -w net.ipv6.conf.all.disable_ipv6=1 && sysctl -w net.ipv6.conf.default.disable_ipv6=1
+  pre-up    ip link add veth0 type veth peer name veth0-p && ip link set veth0 address 01:01:01:01:01:01
+  up        brctl stp $IFACE on
   post-down ip link delete veth0
 
 ######################
@@ -654,7 +642,7 @@ Should output `[    0.179686] AMD Secure Encrypted Virtualization (SEV) active`.
 
 To exit your VM, just run the command `sudo poweroff`.
 
-### Secure, Password-less Boot
+### Measured, Password-less Decrypting Boot
 
 As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Linux:_Full_Disk_Encryption&mobileaction=toggle_view_mobile) I realized my motherboard did not come with an embedded TPM, but instead one can optionally be added. My motherboard can do a sha-based secure boot, so that in combination with TPM-encrypted HDD keys, it provides a chain of trust as the system boots. Here is how it works:
 
@@ -683,10 +671,9 @@ This turned out to be easier than expected.
 
 ```
 sudo apt install clevis-tpm2 clevis-luks clevis-dracut
-sudo clevis luks bind -d /dev/sda2 tpm2 '{"pcr_ids":"0,1,2,3,4,5,6,7"}'
-sudo clevis luks bind -d /dev/sda3 tpm2 '{"pcr_ids":"0,1,2,3,4,5,6,7"}'
-sudo clevis luks bind -d /dev/md0 tpm2 '{"pcr_ids":"0,1,2,3,4,5,6,7"}'
-sudo dracut -f --regenerate-all
+sudo clevis luks bind -d /dev/sda2 tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo clevis luks bind -d /dev/sda3 tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo clevis luks bind -d /dev/md0 tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,2,3,4,5,6,7"}'
 ```
 
 Reboot and watch while your password prompts are bypassed...
@@ -699,6 +686,25 @@ install_items+=" /lib/firmware/amd/amd_sev_fam17h_model01h.sbin "
 ```
 
 Then I needed to run the dracut command again.
+
+Sigh. Rebooting stopped working automatically with all the PCR registers specified above. What this means is that something about the configuration of the machine is dynamic in one of those registers, and it can't be used for this purpose. I need to narrow down correct set of registers to use. I checked out [this](https://trustedcomputinggroup.org/wp-content/uploads/PC-ClientSpecific_Platform_Profile_for_TPM_2p0_Systems_v51.pdf) document.
+
+This turned into a whole thing. I realized at this point that I wasn't booting a UEFI image using a GPT but instead from a legacy MBR. This wasn't permitting me to take full advantage of [measured boot](https://community.juniper.net/answers/blogs/elevate-member/2020/12/22/whats-the-difference-between-secure-boot-and-measured-boot) (I plan to enable secure boot next). I reinstalled the entire system using UEFI.
+
+I dumped the PCR values with this command:
+```
+sudo tpm2_pcrread sha256:0,1,2,3,4,5,6,7+sha1:0,1,2,3,4,5,6,7
+```
+
+I saved them to a file and I'll be able to see which ones change, breaking passwordless boot. I'll iterate until it is stable and document my results here.
+
+Re-reading what I did - I realize that re-running dracut to add that firmware probably changed the PCR values. The system seems to boot fine at present.
+
+I may write further TPM2 enabled software to measure code before launch, if I can't find any.
+
+### Secure Boot
+
+The next step is to enable secure boot. I'll write up these details soon.
 
 ### Sanity check
 

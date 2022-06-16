@@ -28,7 +28,7 @@ create_virtual_network() {
     HARDWARE_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:])_ID"
     HARDWARE_SUFFIX="${!HARDWARE_SUFFIX_NAME}"
     ip link add ${NODE}-${NETWORK_NAME} type veth peer name ${NODE}-${NETWORK_NAME}-p
-    ifconfig ${NODE}-${NETWORK_NAME} hw ether ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
+    ip link set ${NODE}-${NETWORK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
   done
   ip link add br-${NETWORK_NAME} type bridge
 
@@ -144,7 +144,7 @@ HARDWARE_SUFFIX="${!HARDWARE_SUFFIX_NAME}"
 IP_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:])_ID"
 IP_SUFFIX="${!IP_SUFFIX_NAME}"
 ip link add ${NODE}-${NETWORK_NAME} type veth peer name ${NODE}-${NETWORK_NAME}-p
-ifconfig ${NODE}-${NETWORK_NAME} hw ether ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
+ip link set ${NODE}-${NETWORK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
 ip link set ${NODE}-${NETWORK_NAME} netns ${NODE}
 ip link set dev ${NODE}-${NETWORK_NAME}-p master br-${NETWORK_NAME}
 ip netns exec ${NODE} ip addr add ${NETWORK_IPV4_PREFIX}2${IP_SUFFIX}/24 dev ${NODE}-${NETWORK_NAME}
