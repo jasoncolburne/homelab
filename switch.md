@@ -5,15 +5,15 @@
 In this document I walk through the steps required to build and configure a secure server. I demonstrate:
 
 - How to build an AMD [EPYC](https://en.wikipedia.org/wiki/Epyc) server from parts
-- How to install Debian 11
+- How to install [Debian 11](https://en.wikipedia.org/wiki/Debian)
 - How to configure AMD [SME](https://developer.amd.com/sev/)
 - How to configure AMD [SEV](https://developer.amd.com/sev/)
-- How to configure Secureboot on an AsRock Rack EPYCD8-2T
-- How to take advantage of Measured Boot and Trusted Computing to enable automatic decryption of storage devices
-- How to configure, build and sign a custom Debian kernel
-- How to install a kernel and UEFI image for boot
+- How to configure [Secure Boot](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface#SECURE-BOOT) on an AsRock Rack EPYCD8-2T
+- How to take advantage of [Trusted Boot](https://www.thewindowsclub.com/understanding-measured-boot-secure-boot-work-windows-8) to enable automatic decryption of storage devices
+- How to configure, build and [sign](https://en.wikipedia.org/wiki/Digital_signature) a custom Debian kernel
+- How to install a kernel and [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) image for boot
 
-In further walkthroughs, I plan to show how to setup OpenStack from source on top of nginx, Kafka and Postgresql (not at all stock).
+In further walkthroughs, I plan to show how to setup [OpenStack](https://www.openstack.org/) from source on top of [nginx](https://en.wikipedia.org/wiki/Nginx), [Kafka](https://en.wikipedia.org/wiki/Apache_Kafka) and [PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) (not at all stock).
 
 I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process (there is a shim signed with an MS key, from reading).
 
@@ -664,7 +664,7 @@ Should output `[    0.179686] AMD Secure Encrypted Virtualization (SEV) active`.
 
 To exit your VM, just run the command `sudo poweroff`.
 
-### Measured, Password-less Decrypting Boot
+### Trusted, Password-less Decrypting Boot
 
 As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Linux:_Full_Disk_Encryption) I realized my motherboard did not come with an embedded TPM, but instead one can optionally be added. My motherboard can secure boot, so that in combination with TPM-encrypted HDD keys, it provides a chain of trust as the system boots. Here is how it works:
 
@@ -713,7 +713,7 @@ Then I needed to run the dracut command again.
 
 Sigh. Rebooting stopped working automatically with all the PCR registers specified above. What this means is that something about the configuration of the machine is dynamic in one of those registers, and it can't be used for this purpose. I need to narrow down correct set of registers to use. I checked out [this](https://trustedcomputinggroup.org/wp-content/uploads/PC-ClientSpecific_Platform_Profile_for_TPM_2p0_Systems_v51.pdf) document.
 
-This turned into a whole thing. I realized at this point that I wasn't booting a UEFI image using a GPT but instead from a legacy MBR. This wasn't permitting me to take full advantage of [measured boot](https://community.juniper.net/answers/blogs/elevate-member/2020/12/22/whats-the-difference-between-secure-boot-and-measured-boot) (I plan to enable secure boot next). I reinstalled the entire system using UEFI.
+This turned into a whole thing. I realized at this point that I wasn't booting a UEFI image using a GPT but instead from a legacy MBR. This wasn't permitting me to take full advantage of trusted boot (I plan to enable secure boot next). I reinstalled the entire system using UEFI.
 
 I dumped the PCR values with this command:
 ```
