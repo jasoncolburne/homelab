@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-rm -rf ~/install.bundle ~/install.tgz
-mkdir -p ~/install.bundle
+rm -vrf ~/install.bundle ~/install.tgz
+mkdir -vp ~/install.bundle
 
 sudo cp /etc/apt/sources.list ~/install.bundle
 
@@ -20,6 +20,9 @@ sudo tar czvf ~/install.bundle/configuration.tgz \
   etc/ssh/sshd_config.d/10-no-passwords.conf \
   etc/sysctl.d/10-disable-ipv6.conf \
 
+sudo tar czvf ~/install.bundle/mok.tgz \
+  var/lib/shim-signed/mok
+
 cd ~
 
 tar czvf ~/install.bundle/$USER.tgz \
@@ -28,15 +31,15 @@ tar czvf ~/install.bundle/$USER.tgz \
   .zshenv \
   .p10k.zsh \
 
-cp ~/install{,.bundle}/5.10.0-14-sme-amd64.tgz
-cp ~/install{,.bundle}/ldap.tgz
-cp -R ~/install{,.bundle}/patch
-cp -R ~/install{,.bundle}/scripts
+cp -v ~/install{,.bundle}/linux-5.10.0-15-sme-amd64.tgz
+cp -v ~/install{,.bundle}/ldap.tgz
+cp -vR ~/install{,.bundle}/patch
+cp -vR ~/install{,.bundle}/scripts
 
-mv ~/install{,.old}
-mv ~/install{.bundle,}
+mv -v ~/install{,.old}
+mv -v ~/install{.bundle,}
 sudo tar czvf ~/install.tgz install
-rm -rf ~/install
-mv ~/install{.old,}
+rm -v -rf ~/install
+mv -v ~/install{.old,}
 
 sudo chown $USER:$USER ~/install.tgz

@@ -704,7 +704,133 @@ I may write further TPM2 enabled software to measure code before launch, if I ca
 
 ### Secure Boot
 
-The next step is to enable secure boot. I'll write up these details soon.
+Check [this guide](https://wiki.debian.org/SecureBoot).
+
+```
+❯ sudo mokutil --sb-state
+SecureBoot disabled
+Platform is in Setup Mode
+```
+This seems legit.
+
+```
+❯ sudo ls /var/lib/shim-signed/mok/
+ls: cannot access '/var/lib/shim-signed/mok/': No such file or directory
+```
+Okay.
+
+```
+❯ sudo mkdir -p /var/lib/shim-signed/mok/
+❯ cd /var/lib/shim-signed/mok/
+❯ sudo openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv -outform DER -out MOK.der -days 36500 -subj "/CN=$(hostname)/"
+❯ sudo openssl x509 -inform der -in MOK.der -out MOK.pem
+```
+Great!
+
+```
+❯ sudo mokutil --import MOK.der
+❯ sudo mokutil --list-new
+
+# reboot and enroll MOK
+
+❯ sudo dmesg | rg cert
+```
+Hmm, my cert didn't show up.
+
+At this point I spent a few hours troubleshooting so I'll cut to the solution. I needed to rebuild my kernel and sign all my modules and it with the MOK. 
+
+```
+❯ cd ~/kernel/linux-VERSION
+```
+
+Updated `debian/config/amd64/config.sme`
+```
+CONFIG_AMD_MEM_ENCRYPT=y
+CONFIG_MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS=n
+CONFIG_MODULE_COMPRESS_ZSTD=y
+CONFIG_MODULE_SIG=y
+CONFIG_MODULE_SIG_ALL=y
+CONFIG_MODULE_SIG_FORCE=n
+CONFIG_MODULE_SIG_HASH="sha256"
+CONFIG_MODULE_SIG_KEY="/var/lib/shim-signed/mok/MOK.bundle.pem"
+CONFIG_MODULE_SIG_KEY_TYPE_RSA=y
+CONFIG_MODULE_SIG_SHA256=y
+CONFIG_SYSTEM_TRUSTED_KEYS="/var/lib/shim-signed/mok/MOK.pem"
+```
+Note: The Debian guide used this RSA 2048 key, I plan to try upgrading to a stronger, ECC key.
+
+Updated `debian/config/amd64/none/defines`
+```
+...
+
+[sme-amd64_build]
+signed-code: true
+```
+
+Now, the only way I was able to get the kernel to build successfully without taking it apart to understand what was going on was to remove passphrase protection on the signing key, temporarily. If you can disconnect your machine from networking while doing this, I'd advise that. I tried using KBUILD_SIGN_PIN, and tweaking permissions.
+
+```
+❯ cd /var/lib/shim-signed/mok/
+❯ sudo bash -c "openssl rsa -in MOK.priv -text > MOK.priv.pem"
+❯ sudo bash -c "cat MOK.pem MOK.priv.pem > MOK.bundle.pem"
+```
+
+Now rebuild.
+```
+❯ cd ~/kernel/linux-VERSION
+❯ debian/bin/gencontrol.py
+❯ fakeroot make -f debian/rules.gen binary-arch_amd64_none_sme-amd64 -j$(nproc)
+```
+
+Install.
+```
+❯ cd ..
+❯ sudo apt -y install ./linux-image-IDENTIFYING-DETAILS.deb
+```
+
+Sign your kernel so that secure boot will trust it.
+```
+❯ sudo apt install sbsigntool
+❯ VERSION="$(uname -r)"
+❯ cd /var/lib/shim-signed/mok/
+❯ sudo sbsign --key MOK.priv --cert MOK.pem "/boot/vmlinuz-$VERSION" --output "/boot/vmlinuz-$VERSION.tmp"
+❯ sudo mv "/boot/vmlinuz-$VERSION.tmp" "/boot/vmlinuz-$VERSION"
+❯ sudo dracut -f
+```
+
+That's it! Now reboot and enable secure boot!
+
+Test results after reboot:
+```
+❯ sudo dmesg | rg secure
+[    0.000000] secureboot: Secure boot enabled
+❯ sudo dmesg | rg SME
+[    0.122980] AMD Memory Encryption Features active: SME
+❯ sudo dmesg | rg SEV
+[    3.242403] ccp 0000:04:00.2: SEV firmware update successful
+[    3.314387] ccp 0000:04:00.2: SEV API:0.17 build:48
+[   13.245230] SEV supported
+```
+
+Now that our PCR values won't be changing - let's destroy and re-enable our clevis keys so the system can boot without intervention.
+
+Unbind existing, dead keys.
+```
+sudo clevis luks unbind -d /dev/sda3 -s 1
+sudo clevis luks unbind -d /dev/sda4 -s 1
+sudo clevis luks unbind -d /dev/md0 -s 1
+```
+
+Bind shiny, new keys.
+```
+sudo clevis luks bind -d /dev/sda3 tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo clevis luks bind -d /dev/sda4 tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,2,3,4,5,6,7"}'
+sudo clevis luks bind -d /dev/md0 tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,2,3,4,5,6,7"}'
+```
+
+Reboot one more time, do some grepping and bask in the glory of soon to be broken RSA secured boot!
+
+I'll post details here if I manage to upgrade to ECC.
 
 ### Sanity check
 
