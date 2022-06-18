@@ -15,7 +15,7 @@ In this document I walk through the steps required to build and configure a secu
 
 In further walkthroughs, I plan to show how to setup OpenStack from source on top of nginx, Kafka and Postgresql (not at all stock).
 
-I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process.
+I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process (there is a shim signed with an MS key, from reading).
 
 Disambiguation: The term `ECC` may be used in this document to represent either of two concepts: [Error Correction Code](https://en.wikipedia.org/wiki/Error_correction_code) Memory, or [Elliptic Curve Cryptography](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography). Use context to determine which.
 
