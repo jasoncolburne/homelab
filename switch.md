@@ -17,7 +17,7 @@ In further walkthroughs, I plan to show how to setup OpenStack from source on to
 
 I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process.
 
-Disambiguation: The term `ECC` may be used in this document to represent either of two concepts: [Error Correction Code](https://en.wikipedia.org/wiki/Error_correction_code) Memory, and [Elliptic Curve Cryptography](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography).
+Disambiguation: The term `ECC` may be used in this document to represent either of two concepts: [Error Correction Code](https://en.wikipedia.org/wiki/Error_correction_code) Memory, or [Elliptic Curve Cryptography](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography). Use context to determine which.
 
 ## Motivation and Overview
 
