@@ -5,7 +5,7 @@
 In this document I walk through the steps required to build and configure a secure server. I demonstrate:
 
 - How to build an AMD [EPYC](https://en.wikipedia.org/wiki/Epyc) server from parts
-- How to install [Debian 11](https://en.wikipedia.org/wiki/Debian)
+- How to install [Debian](https://en.wikipedia.org/wiki/Debian) 11
 - How to configure AMD [SME](https://developer.amd.com/sev/)
 - How to configure AMD [SEV](https://developer.amd.com/sev/)
 - How to configure [Secure Boot](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface#SECURE-BOOT) on an AsRock Rack EPYCD8-2T
