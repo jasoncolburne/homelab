@@ -52,7 +52,7 @@ Don't forget to grab an anti-static wrist strap for this build, they are cheaply
 ## Planned Parts
 - [Thales Luna PCIe HSM](https://cpl.thalesgroup.com/encryption/hardware-security-modules/pcie-hsms)
 
-I feel like I need to explain this one for those who don't know. An HSM ([Hardware Security Module](https://en.wikipedia.org/wiki/Hardware_security_module)) provides [fail-secure](https://en.wikipedia.org/wiki/Fail-safe#Fail_safe_and_fail_secure) tamper-evident storage and cryptographic acceleration. When I worked with them in the past, I was able to provision the device with custom code to provide a security boundary for the most critical pieces of my applications. These units of code (in Eracom and Safenet terms) were called FMs (Functionality Modules). It's probably the same for Thales, but I'll see when I get engage them.
+I feel like I need to explain this one for those who don't know. An HSM ([Hardware Security Module](https://en.wikipedia.org/wiki/Hardware_security_module)) provides [fail-secure](https://en.wikipedia.org/wiki/Fail-safe#Fail_safe_and_fail_secure) tamper-evident storage and cryptographic acceleration. When I worked with them in the past, I was able to provision the device with custom code to provide a security boundary for the most critical pieces of my applications. These units of code (in Eracom and Safenet terms) were called FMs (Functionality Modules). It's probably the same for Thales, but I'll see when I figure out how to engage them.
 
 ## Special Tools
 
