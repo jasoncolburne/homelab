@@ -22,7 +22,7 @@ A detailed walkthrough of my home lab build. I plan to use this to:
 
 I would have like to connect the `core switch` directly to the primary `XT8`, but it didn't have enough available ports. I could have ran a dual connection to the `core switch` and then hung everything off that, but I wanted more resiliency on the right side of the diagram (if my `core switch` goes down, which is more likely than the TL-SG105, the whole network would become unusable).
 
-The other configuration I considers was the secondary `XT8` node linked to the primary, but the backhaul doesn't support bonding that I know of. I figured that if I wanted to support a dual connection to the `core switch` while providing the resiliency mentioned in the paragraph above, I had the option of switching one connection through the secondary `XT8` or the `TL-SG105`. Since the `XT8` is a far more complex device and I was making my decision based on expected availability, it made sense to arrange things as I have.
+The other configuration I considered was the secondary `XT8` node linked to the primary, but the backhaul doesn't support bonding that I know of. I figured that if I wanted to support a dual connection to the `core switch` while providing the resiliency mentioned in the paragraph above, I had the option of switching one connection through the secondary `XT8` or the `TL-SG105`. Since the `XT8` is a far more complex device and I was making my decision based on expected availability, it made sense to arrange things as I have.
 
 ![Network Topology](assets/network-topology.jpg)
 
