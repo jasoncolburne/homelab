@@ -2,6 +2,22 @@
 
 # Hand-Built Multi-Purpose Switch
 
+In this document I walk through the steps required to build and configure a secure server. I demonstrate:
+
+- How to build an AMD [EPYC](https://en.wikipedia.org/wiki/Epyc) server from parts
+- How to install Debian 11
+- How to configure AMD [SME](https://developer.amd.com/sev/)
+- How to configure AMD [SEV](https://developer.amd.com/sev/)
+- How to configure Secureboot on an AsRock Rack EPYCD8-2T
+- How to take advantage of Measured Boot and Trusted Computing to enable automatic decryption of storage devices
+- How to configure, build and sign a custom Debian kernel
+
+In further walkthroughs, I plan to show how to setup OpenStack from source on top of nginx, Kafka and Postgresql (not at all stock).
+
+I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process.
+
+## Motivation and Overview
+
 I wanted a way to network a NAS and a workstation for high throughput while providing NAS access to
 other devices. To accomplish this, I designed a switch with 10x10gbe ports and 8x1gbe ports. I decided
 to go with 6x[RJ45](https://en.wikipedia.org/wiki/Modular_connector#8P8C) and
