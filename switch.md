@@ -826,6 +826,8 @@ That's it! Now reboot and enable secure boot!
 
 Test results after reboot:
 ```
+❯ sudo mokutil --sb-state
+SecureBoot enabled
 ❯ sudo dmesg | rg secure
 [    0.000000] secureboot: Secure boot enabled
 ❯ sudo dmesg | rg SME
