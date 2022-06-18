@@ -11,6 +11,7 @@ In this document I walk through the steps required to build and configure a secu
 - How to configure Secureboot on an AsRock Rack EPYCD8-2T
 - How to take advantage of Measured Boot and Trusted Computing to enable automatic decryption of storage devices
 - How to configure, build and sign a custom Debian kernel
+- How to install a kernel and UEFI image for boot
 
 In further walkthroughs, I plan to show how to setup OpenStack from source on top of nginx, Kafka and Postgresql (not at all stock).
 
