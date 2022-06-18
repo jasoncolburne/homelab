@@ -38,6 +38,7 @@ cp -vR ~/install{,.bundle}/scripts
 
 mv -v ~/install{,.old}
 mv -v ~/install{.bundle,}
+sudo chown $USER:$USER install/*
 sudo tar czvf ~/install.tgz install
 rm -v -rf ~/install
 mv -v ~/install{.old,}
