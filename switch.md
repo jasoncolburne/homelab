@@ -782,6 +782,11 @@ Now rebuild.
 ❯ fakeroot make -f debian/rules.gen binary-arch_amd64_none_sme-amd64 -j$(nproc)
 ```
 
+Remove exposed key.
+```
+❯ sudo rm -rf /var/lib/shim-signed/mok/MOK.{priv,bundle}.pem
+```
+
 Install.
 ```
 ❯ cd ..
