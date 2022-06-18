@@ -819,7 +819,7 @@ Test results after reboot:
 
 Now that our PCR values won't be changing - let's destroy and re-enable our clevis keys so the system can boot without intervention.
 
-Unbind existing, dead keys.
+Unbind existing, dead keys (your setup likely differs, so use your wits, fstab and clevis to determine the correct device and key slot).
 ```
 sudo clevis luks unbind -d /dev/sda3 -s 1
 sudo clevis luks unbind -d /dev/sda4 -s 1
