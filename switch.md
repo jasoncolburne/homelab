@@ -784,7 +784,7 @@ Now rebuild.
 
 Remove exposed key.
 ```
-❯ sudo rm -rf /var/lib/shim-signed/mok/MOK.{priv,bundle}.pem
+❯ sudo rm /var/lib/shim-signed/mok/MOK.{priv,bundle}.pem
 ```
 
 Install.
