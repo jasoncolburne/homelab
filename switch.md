@@ -17,6 +17,8 @@ In further walkthroughs, I plan to show how to setup OpenStack from source on to
 
 I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process.
 
+Disambiguation: The term `ECC` may be used in this document to represent either of two concepts: [Error Correction Code](https://en.wikipedia.org/wiki/Error_correction_code) Memory, and [Elliptic Curve Cryptography](https://en.wikipedia.org/wiki/Elliptic-curve_cryptography).
+
 ## Motivation and Overview
 
 I wanted a way to network a NAS and a workstation for high throughput while providing NAS access to
