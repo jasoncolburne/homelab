@@ -833,7 +833,8 @@ Test results after reboot:
 ```
 ❯ sudo mokutil --sb-state
 SecureBoot enabled
-❯ sudo dmesg | rg secure
+❯ sudo dmesg | rg Secure
+[    0.000000] Kernel is locked down from EFI Secure Boot; see man kernel_lockdown.7
 [    0.000000] secureboot: Secure boot enabled
 ❯ sudo dmesg | rg SME
 [    0.122980] AMD Memory Encryption Features active: SME
