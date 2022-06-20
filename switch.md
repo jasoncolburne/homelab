@@ -13,7 +13,7 @@ In this document I walk through the steps required to build and configure a secu
 - How to configure, build and [sign](https://en.wikipedia.org/wiki/Digital_signature) a custom Debian kernel
 - How to install a kernel and [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) image for boot
 
-In further walkthroughs, I plan to show how to setup [OpenStack](https://www.openstack.org/) from source on top of [nginx](https://en.wikipedia.org/wiki/Nginx), [Kafka](https://en.wikipedia.org/wiki/Apache_Kafka) and [PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) (not at all stock).
+In further walkthroughs, I plan to show how to setup [OpenStack](https://www.openstack.org/) from source behind [nginx](https://en.wikipedia.org/wiki/Nginx), on top of [Kafka](https://en.wikipedia.org/wiki/Apache_Kafka) and [PostgreSQL](https://en.wikipedia.org/wiki/PostgreSQL) (not at all stock).
 
 I believe the root CA for the MS key that is the basis for most secure boot has actually been shown to have been compromised. Luckily, my motherboard supports loading custom keys and chains of trust so I may eventually get around to figuring out if I can revoke it without major surgery on the linux boot process (there is a shim signed with an MS key, from reading).
 
