@@ -165,9 +165,9 @@ heat sink with the stock paste. I did both, during this process (I removed the h
 
 I chose to install Debian Bullseye for my host operating system on this server. I have used Gentoo, Debian, Ubuntu, Redhat, CentOS, OpenBSD, slackware and some others that escape me, and I appreciate Debian's simplicity of configuration, availability of documentation, and availability of binary packages.
 
-### BIOS
+### Basic UEFI Firmware Configuration
 
-Now that we can access the BIOS, let's ensure that SVM and SMEE are enabled and IOMMU is set to Auto.
+Now that we can access the UEFI firmware menu, let's ensure that SVM and SMEE are enabled and IOMMU is set to Auto.
 
 ![IOMMU](assets/switch/bios-iommu.jpg)
 
@@ -672,12 +672,12 @@ As I began investigating [this guide](https://fit-pc.com/wiki/index.php?title=Li
 
 As this process occurs, controlling code (whatever is in control at the time) checks various system components and configurations and creates running [digests](https://en.wikipedia.org/wiki/Cryptographic_hash_function) in some hidden registers in the TPM. It does this by extending similar to any other update portion of a hash function. If at each step, the appropriate registers are verified and extended with say, a digest of the next block of code to execute, and the initial code verifies system configuration, we can rest assured nothing has changed since the system was configured (there is a miniscule chance of a collision here but it is unlikely that the source data/code required to create a colliding digest would be valid). Additionally, the tpm contains some random data that can be reset at whim. This data is combined with requested PCR values to generate a key within the TPM that can encrypt and decrypt data at various stages of boot using keys bound to the state of execution. More clearly, the TPM can help unlock data and code during the boot process based on expected system state, without requiring user intervention.
 
-1. The system UEFI is loaded into memory and the system POSTs and performs basic initialization, updating the registers in the TPM.
-1. The system UEFI uses a set of certificates to validate signatures on any boot code that is run.
-1. If the signatures are valid, the bios hands control to the UEFI boot loader.
+1. The system UEFI firmware is loaded into memory and the system POSTs and performs basic initialization, updating the registers in the TPM.
+1. The system UEFI firmware uses a set of certificates to validate signatures on any boot code that is to be run.
+1. If the signatures are valid, the firmware hands control to the UEFI boot loader.
 1. The boot loader is configured to not accept command line input, and is configured to use the TPM to recover the keys for the other partitions (the encrypted keys will live on the EFI image with the kernel). If you want to get really hardcore, you can try to turn off module loading in the kernel and include your drivers etc in the kernel directly. I am not sure disabling module loading really buys us much, given the other lengths we are going to. Edit: With module signing, there is no problem.
 1. The filesystem keys are recovered and used to load the relevant parts of the OS into memory by the kernel.
-1. The kernel continues to run, but all partitions excluding boot are encrypted and impervious to observation. Since we have SME and Secure Virtualization enabled, we aren't worried about observation of memory. If the network ports are locked down and filesystem permissions are configured correctly, we should be in as good a position as we can be. (I've actually designed an implemented systems that leveraged x86 real-mode code to perform low level disk ciphering and managed to encrypt the boot loader as well - this was before Secureboot and TPMs were commonly deployed - but this required modifying the BIOS and simply obfuscating keying data within it - not real security).
+1. The kernel continues to run, but all partitions excluding boot are encrypted and impervious to observation. Since we have SME and Secure Virtualization enabled, we aren't worried about observation of memory. If the network ports are locked down and filesystem permissions are configured correctly, we should be in as good a position as we can be.
 1. If we want to go further, we can continue to use the applciation TPM registers to ensure that any software that is sequentially loaded is authorized to run. I am going to investigate wiring up AppArmor to the TPM. Maybe I'll post about that in the future.
 
 Bonus (HSM):
@@ -687,9 +687,9 @@ The TPM itself:
 
 ![TPM](assets/switch/tpm.jpg)
 
-After installation, check that it is recognized in the BIOS and it's best to perform the clear action (which I can only presume generates new keying material). I imagine the kdf the chip uses internally incorporates the cpu id to lock the TPM to the CPU, so this may be unnecessary, but it's better to be safe.
+After installation, check that it is recognized in the UEFI firmware. It's best to perform the clear action (which I can only presume generates new, unique, keying material). I imagine the kdf the chip uses internally incorporates the cpu id to lock the TPM to the CPU, so this may be unnecessary, but it's better to be safe.
 
-![TPM in BIOS](assets/switch/tpm-bios.jpg)
+![TPM in Firmware](assets/switch/tpm-bios.jpg)
 
 At this point, I tried a reinstallation of the entire system to see if the `random key` option during filesystem provisioning would work out of the box and use the TPM. It did not, and again constrained me to ext2 if I selected `random key`. I chose to again use passphrases, which I will convert to keys and encrypt using the TPM. These encrypted keys can be used during boot instead of having to type passphrases in.
 
