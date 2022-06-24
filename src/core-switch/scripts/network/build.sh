@@ -25,7 +25,7 @@ create_virtual_network() {
   # create devices
   for NODE in "${NODES[@]}"
   do
-    HARDWARE_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:])_ID"
+    HARDWARE_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:] | tr - _)_ID"
     HARDWARE_SUFFIX="${!HARDWARE_SUFFIX_NAME}"
     ip link add ${NODE}-${NETWORK_NAME} type veth peer name ${NODE}-${NETWORK_NAME}-p
     ip link set ${NODE}-${NETWORK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
@@ -57,9 +57,18 @@ create_virtual_network() {
   then
     for NODE in "${NODES[@]}"
     do
-      IP_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:])_ID"
+      IP_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:] | tr - _)_ID"
       IP_SUFFIX="${!IP_SUFFIX_NAME}"
-      ip netns exec ${NODE} ip addr add ${NETWORK_IPV4_PREFIX}2${IP_SUFFIX}/24 dev ${NODE}-${NETWORK_NAME}
+      IP_ADDRESS=${NETWORK_IPV4_PREFIX}2${IP_SUFFIX}
+      LINK_NAME=${NODE}-${NETWORK_NAME}
+
+      ip netns exec ${NODE} ip addr add ${IP_ADDRESS}/24 dev ${LINK_NAME}
+      if rg ${LINK_NAME} /etc/hosts
+      then
+        sed -i 's/^#?\d\{1,3\}\.\d\{1,3\}.\d\{1,3\}.\d\{1,3\} ${LINK_NAME}\$/${IP_ADDRESS} ${LINK_NAME}/' /etc/hosts
+      else
+        echo "${IP_ADDRESS} ${LINK_NAME}" >> /etc/hosts
+      fi
     done
   fi
 
@@ -80,11 +89,16 @@ create_virtual_network() {
   fi
 }
 
-CTRL_ID=10
-DASH_ID=11
-NET_ID=12
-COMP1_ID=13
-COMP2_ID=14
+OS_CTRL_ID=10
+OS_DASH_ID=11
+OS_NET_ID=12
+OS_COMP1_ID=13
+OS_COMP2_ID=14
+
+AK_KAFKA_ID=15
+AK_ZOO_ID=16
+
+AMQP_ID=17
 
 # the above ids generate input for the last octet of the ip and virtual hardware
 # addresses associated with each node.
@@ -110,46 +124,64 @@ COMP2_ID=14
 NETWORK_NAME=mgmt
 NETWORK_IPV4_PREFIX=10.0.2.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:02:
-NODES=(ctrl dash net comp1 comp2)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2)
 ASSIGN_IPS=1
+ADD_DEFAULT_ROUTES=0
+FORCED_BRIDGE_IP=
+create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HARDWARE_PREFIX}" "${ASSIGN_IPS}" "${ADD_DEFAULT_ROUTES}"
+
+NETWORK_NAME=infr
+NETWORK_IPV4_PREFIX=10.0.4.
+NETWORK_HARDWARE_PREFIX=de:ad:be:ef:04:
+NODES=(os-ctrl ak-kafka ak-zoo amqp)
+ASSIGN_IPS=1
+ADD_DEFAULT_ROUTES=0
+FORCED_BRIDGE_IP=
+create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HARDWARE_PREFIX}" "${ASSIGN_IPS}" "${ADD_DEFAULT_ROUTES}"
+
+NETWORK_NAME=data
+NETWORK_IPV4_PREFIX=10.0.8.
+NETWORK_HARDWARE_PREFIX=de:ad:be:ef:08:
+NODES=(os-net os-comp1 os-comp2)
+ASSIGN_IPS=0
 ADD_DEFAULT_ROUTES=0
 FORCED_BRIDGE_IP=
 create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HARDWARE_PREFIX}" "${ASSIGN_IPS}" "${ADD_DEFAULT_ROUTES}"
 
 NETWORK_NAME=api
 NETWORK_IPV4_PREFIX=192.168.50.
-NETWORK_HARDWARE_PREFIX=de:ad:be:ef:04:
-NODES=(ctrl dash)
+NETWORK_HARDWARE_PREFIX=de:ad:be:ef:10:
+NODES=(os-ctrl os-dash)
 ASSIGN_IPS=1
 ADD_DEFAULT_ROUTES=1
 FORCED_BRIDGE_IP=192.168.50.251
 create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HARDWARE_PREFIX}" "${ASSIGN_IPS}" "${ADD_DEFAULT_ROUTES}"
 
-NETWORK_NAME=data
-NETWORK_IPV4_PREFIX=10.0.8.
-NETWORK_HARDWARE_PREFIX=de:ad:be:ef:08:
-NODES=(net comp1 comp2)
-ASSIGN_IPS=0
-ADD_DEFAULT_ROUTES=0
-FORCED_BRIDGE_IP=
-create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HARDWARE_PREFIX}" "${ASSIGN_IPS}" "${ADD_DEFAULT_ROUTES}"
-
 # snowflake configuration to connect network node to external network
-NODE=net
+NODE=os-net
 NETWORK_NAME=ext
 NETWORK_IPV4_PREFIX=192.168.50.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:01:
-HARDWARE_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:])_ID"
+HARDWARE_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:] | tr - _)_ID"
 HARDWARE_SUFFIX="${!HARDWARE_SUFFIX_NAME}"
-IP_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:])_ID"
+IP_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:] | tr - _)_ID"
 IP_SUFFIX="${!IP_SUFFIX_NAME}"
-ip link add ${NODE}-${NETWORK_NAME} type veth peer name ${NODE}-${NETWORK_NAME}-p
-ip link set ${NODE}-${NETWORK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
-ip link set ${NODE}-${NETWORK_NAME} netns ${NODE}
-ip link set dev ${NODE}-${NETWORK_NAME}-p master br-${NETWORK_NAME}
-ip netns exec ${NODE} ip addr add ${NETWORK_IPV4_PREFIX}2${IP_SUFFIX}/24 dev ${NODE}-${NETWORK_NAME}
-ip netns exec ${NODE} ip link set dev ${NODE}-${NETWORK_NAME} up
-ip link set dev ${NODE}-${NETWORK_NAME}-p up
+IP_ADDRESS=${NETWORK_IPV4_PREFIX}2${IP_SUFFIX}
+LINK_NAME=${NODE}-${NETWORK_NAME}
+
+ip link add ${LINK_NAME} type veth peer name ${LINK_NAME}-p
+if rg ${LINK_NAME} /etc/hosts
+then
+  sed -i 's/^#?\d\{1,3\}\.\d\{1,3\}.\d\{1,3\}.\d\{1,3\} ${LINK_NAME}\$/${IP_ADDRESS} ${LINK_NAME}/' /etc/hosts
+else
+  echo "${IP_ADDRESS} ${LINK_NAME}" >> /etc/hosts
+fi
+ip link set ${LINK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
+ip link set ${LINK_NAME} netns ${NODE}
+ip link set dev ${LINK_NAME}-p master br-${NETWORK_NAME}
+ip netns exec ${NODE} ip addr add ${IP_ADDRESS}/24 dev ${LINK_NAME}
+ip netns exec ${NODE} ip link set dev ${LINK_NAME} up
+ip link set dev ${LINK_NAME}-p up
 ip netns exec ${NODE} ip route add 0.0.0.0/0 via ${NETWORK_IPV4_PREFIX}1
 
 # wire the api bridge to the external bridge
