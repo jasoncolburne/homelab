@@ -687,7 +687,7 @@ The TPM itself:
 
 ![TPM](assets/switch/tpm.jpg)
 
-After installation, check that it is recognized in the UEFI firmware. It's best to perform the clear action (which I can only presume generates new, unique, keying material). I imagine the kdf the chip uses internally incorporates the cpu id to lock the TPM to the CPU, so this may be unnecessary, but it's better to be safe.
+After installation, check that it is recognized in the UEFI firmware. It's best to perform the clear action (which I can only presume generates new, unique, keying material). I don't trust that it isn't some default value coming from the factory, and that protected keys could be accessed if another stock TPM was fed my system configuration. Maybe I'm paranoid.
 
 ![TPM in Firmware](assets/switch/tpm-firmware.jpg)
 
