@@ -169,11 +169,11 @@ I chose to install Debian Bullseye for my host operating system on this server. 
 
 Now that we can access the UEFI firmware menu, let's ensure that SVM and SMEE are enabled and IOMMU is set to Auto.
 
-![IOMMU](assets/switch/bios-iommu.jpg)
+![IOMMU](assets/switch/firmware-iommu.jpg)
 
 One other annoying thing about the Startech cards is that the onboard ROM tries to do a network PXE boot for each nic, sequentially. This adds quite a bit of time to the boot process. To disable, navigate to the Boot/CSM menu and disable all the OpROMs. I left the M.2 ones on in this photo, but they weren't necessary.
 
-![Disable PXE](assets/switch/bios-disable-pxe.jpg)
+![Disable PXE](assets/switch/firmware-disable-pxe.jpg)
 
 ### OS Installation
 
@@ -689,7 +689,7 @@ The TPM itself:
 
 After installation, check that it is recognized in the UEFI firmware. It's best to perform the clear action (which I can only presume generates new, unique, keying material). I imagine the kdf the chip uses internally incorporates the cpu id to lock the TPM to the CPU, so this may be unnecessary, but it's better to be safe.
 
-![TPM in Firmware](assets/switch/tpm-bios.jpg)
+![TPM in Firmware](assets/switch/tpm-firmware.jpg)
 
 At this point, I tried a reinstallation of the entire system to see if the `random key` option during filesystem provisioning would work out of the box and use the TPM. It did not, and again constrained me to ext2 if I selected `random key`. I chose to again use passphrases, which I will convert to keys and encrypt using the TPM. These encrypted keys can be used during boot instead of having to type passphrases in.
 
