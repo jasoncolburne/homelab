@@ -62,6 +62,15 @@ cd ~
 sudo mv "/boot/vmlinuz-$VERSION.tmp" "/boot/vmlinuz-$VERSION"
 sudo dracut -f
 
+echo "disabling apt-daily services"
+# I don't really want to do this but logged in one day and found load
+# at 173, due to 173 systemd-journal processes spawned by a whole bunch
+# of apt-daily jobs. I didn't bother to figure out why, but I should.
+sudo systemctl disable apt-daily
+sudo systemctl disable apt-daily-upgrade
+sudo systemctl disable apt-daily.timer
+sudo systemctl disable apt-daily-upgrade.timer
+
 echo "cleaning up"
 sudo apt-get -y autoremove
 
