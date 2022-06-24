@@ -159,7 +159,7 @@ heat sink with the stock paste. I did both, during this process (I removed the h
 1. Next up, and finally, are the network cards. Plug them in in your desired configuration. I had to reorganize things to avoid the heatsink with the SFP+ card.
 ![Networking Installed](assets/switch/networking-top.jpg)
 ![Networking Rear](assets/switch/networking-rear.jpg)
-1. Congratulations! If all was successful, your server should POST and you can use the BMC's KVM to load a bootable image. Check out the configuration section for further setup instructions.
+1. Congratulations! If all was successful, your server should POST and you can use the BMC's KVM to load a bootable image. Check out the configuration section for further setup instructions. **Note: I later realized that if you do not use the IPMI KVM to load the installation image _before_ powering on the server, the UEFI cannot recognize the UEFI installation media and you may be tempted to boot the image from legacy mode. If you do this, the installer will likely partition the disk using an MBR and without a GPT/UEFI image, meaning that you can't take full advantage of some boot features.**
 
 ## Configuration
 
