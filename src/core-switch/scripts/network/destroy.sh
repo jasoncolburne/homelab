@@ -18,7 +18,7 @@ cleanup_network() {
     ip link delete ${LINK_NAME} || true
     if rg ${LINK_NAME} /etc/hosts
     then
-      sed -i 's/^\([^#].*${LINK_NAME}\)$/#\1/' /etc/hosts
+      sed -i "s/^\([^#].*${LINK_NAME}\)$/#\1/" /etc/hosts
     fi
   done
 

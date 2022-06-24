@@ -65,7 +65,7 @@ create_virtual_network() {
       ip netns exec ${NODE} ip addr add ${IP_ADDRESS}/24 dev ${LINK_NAME}
       if rg ${LINK_NAME} /etc/hosts
       then
-        sed -i 's/^#?\d\{1,3\}\.\d\{1,3\}.\d\{1,3\}.\d\{1,3\} ${LINK_NAME}\$/${IP_ADDRESS} ${LINK_NAME}/' /etc/hosts
+        sed -i "s/^.*${LINK_NAME}$/${IP_ADDRESS} ${LINK_NAME}/" /etc/hosts
       else
         echo "${IP_ADDRESS} ${LINK_NAME}" >> /etc/hosts
       fi
@@ -79,6 +79,7 @@ create_virtual_network() {
     ip link set dev ${NODE}-${NETWORK_NAME}-p up
   done
   ip link set dev br-${NETWORK_NAME} up
+  brctl stp br-${NETWORK_NAME} on
 
   if [[ "${ADD_DEFAULT_ROUTES}" == "1" ]]
   then
@@ -172,7 +173,7 @@ LINK_NAME=${NODE}-${NETWORK_NAME}
 ip link add ${LINK_NAME} type veth peer name ${LINK_NAME}-p
 if rg ${LINK_NAME} /etc/hosts
 then
-  sed -i 's/^#?\d\{1,3\}\.\d\{1,3\}.\d\{1,3\}.\d\{1,3\} ${LINK_NAME}\$/${IP_ADDRESS} ${LINK_NAME}/' /etc/hosts
+  sed -i "s/^.*${LINK_NAME}$/${IP_ADDRESS} ${LINK_NAME}/" /etc/hosts
 else
   echo "${IP_ADDRESS} ${LINK_NAME}" >> /etc/hosts
 fi
