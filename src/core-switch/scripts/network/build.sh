@@ -75,12 +75,9 @@ create_virtual_network() {
   # bring devices up
   for NODE in "${NODES[@]}"
   do
-    ip netns exec ${NODE} ip link set ${NODE}-${NETWORK_NAME} mtu 9000
     ip netns exec ${NODE} ip link set dev ${NODE}-${NETWORK_NAME} up
-    ip link set ${NODE}-${NETWORK_NAME}-p mtu 9000
     ip link set dev ${NODE}-${NETWORK_NAME}-p up
   done
-  ip link set br-${NETWORK_NAME} mtu 9000
   ip link set dev br-${NETWORK_NAME} up
   brctl stp br-${NETWORK_NAME} on
 
@@ -182,8 +179,6 @@ else
 fi
 ip link set ${LINK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
 ip link set ${LINK_NAME} netns ${NODE}
-ip netns exec ${NODE} ip link set ${LINK_NAME} mtu 9000
-ip link set ${LINK_NAME}-p mtu 9000
 ip link set dev ${LINK_NAME}-p master br-${NETWORK_NAME}
 ip netns exec ${NODE} ip addr add ${IP_ADDRESS}/24 dev ${LINK_NAME}
 ip netns exec ${NODE} ip link set dev ${LINK_NAME} up
@@ -192,8 +187,6 @@ ip netns exec ${NODE} ip route add 0.0.0.0/0 via ${NETWORK_IPV4_PREFIX}1
 
 # wire the api bridge to the external bridge
 ip link add ext-to-api type veth peer name api-to-ext
-ip link set ext-to-api mtu 9000
-ip link set api-to-ext mtu 9000
 ip link set dev ext-to-api master br-ext
 ip link set dev api-to-ext master br-api
 ip addr add 192.168.50.252/24 dev ext-to-api
