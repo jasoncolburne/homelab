@@ -75,6 +75,7 @@ create_virtual_network() {
   # bring devices up
   for NODE in "${NODES[@]}"
   do
+    ip netns exec ${NODE} ip link set dev lo up
     ip netns exec ${NODE} ip link set dev ${NODE}-${NETWORK_NAME} up
     ip link set dev ${NODE}-${NETWORK_NAME}-p up
   done
@@ -100,6 +101,8 @@ AK_KAFKA_ID=15
 AK_ZOO_ID=16
 
 AMQP_ID=17
+
+PGSQL_ID=18
 
 # the above ids generate input for the last octet of the ip and virtual hardware
 # addresses associated with each node.
@@ -134,7 +137,7 @@ create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HAR
 NETWORK_NAME=infr
 NETWORK_IPV4_PREFIX=10.0.4.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:04:
-NODES=(os-ctrl ak-kafka ak-zoo amqp)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 ak-kafka ak-zoo amqp pgsql)
 ASSIGN_IPS=1
 ADD_DEFAULT_ROUTES=0
 FORCED_BRIDGE_IP=

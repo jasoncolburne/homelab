@@ -35,12 +35,12 @@ NODES=(os-ctrl os-dash)
 cleanup_network api
 NODES=(os-ctrl ak-kafka ak-zoo amqp)
 cleanup_network infr
-NODES=(os-net os-comp1 os-comp2)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 ak-kafka ak-zoo amqp pgsql)
 cleanup_network data
 NODES=(os-ctrl os-dash os-net os-comp1 os-comp2)
 cleanup_network mgmt
 
-NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 ak-kafka ak-zoo amqp)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 ak-kafka ak-zoo amqp pgsql)
 for NODE in "${NODES[@]}"
 do
   ip netns del ${NODE} || true

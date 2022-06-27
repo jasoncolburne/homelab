@@ -15,6 +15,8 @@ sudo apt-get -y install \
   clevis-dracut \
   sbsigntool
 
+# sudo apt-get -y --no-install-recommends install firejail/bullseye-backports
+
 echo "installing optional packages - you will need to enter your user password to switch to zsh"
 sudo apt-get -y install zsh git ripgrep && chsh -s $(which zsh) || true
 
