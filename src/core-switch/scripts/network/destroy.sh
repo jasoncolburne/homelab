@@ -29,6 +29,7 @@ cleanup_network() {
 }
 
 ip link delete ext-to-api || true
+ip link delete host-mgmt || true
 NODES=(os-net)
 cleanup_network ext
 NODES=(os-ctrl os-dash)

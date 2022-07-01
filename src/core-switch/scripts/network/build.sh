@@ -51,7 +51,6 @@ create_virtual_network() {
   else
     BRIDGE_IP=${FORCED_BRIDGE_IP}
   fi
-  ip addr add ${BRIDGE_IP}/24 dev br-$NETWORK_NAME
   
   if [[ "${ASSIGN_IPS}" == "1" ]]
   then
@@ -80,7 +79,6 @@ create_virtual_network() {
     ip link set dev ${NODE}-${NETWORK_NAME}-p up
   done
   ip link set dev br-${NETWORK_NAME} up
-  brctl stp br-${NETWORK_NAME} on
 
   if [[ "${ADD_DEFAULT_ROUTES}" == "1" ]]
   then
@@ -103,6 +101,8 @@ AK_ZOO_ID=16
 AMQP_ID=17
 
 PGSQL_ID=18
+
+HOST_ID=19
 
 # the above ids generate input for the last octet of the ip and virtual hardware
 # addresses associated with each node.
@@ -196,3 +196,28 @@ ip addr add 192.168.50.252/24 dev ext-to-api
 ip addr add 192.168.50.253/24 dev api-to-ext
 ip link set dev ext-to-api up
 ip link set dev api-to-ext up
+
+# wire the host to the management network
+NODE=host
+NETWORK_NAME=mgmt
+NETWORK_IPV4_PREFIX=10.0.2.
+NETWORK_HARDWARE_PREFIX=de:ad:be:ef:02:
+HARDWARE_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:] | tr - _)_ID"
+HARDWARE_SUFFIX="${!HARDWARE_SUFFIX_NAME}"
+IP_SUFFIX_NAME="$(echo -n ${NODE} | tr [:lower:] [:upper:] | tr - _)_ID"
+IP_SUFFIX="${!IP_SUFFIX_NAME}"
+IP_ADDRESS=${NETWORK_IPV4_PREFIX}2${IP_SUFFIX}
+LINK_NAME=${NODE}-${NETWORK_NAME}
+
+ip link add ${LINK_NAME} type veth peer name ${LINK_NAME}-p
+if rg ${LINK_NAME} /etc/hosts
+then
+  sed -i "s/^.*${LINK_NAME}$/${IP_ADDRESS} ${LINK_NAME}/" /etc/hosts
+else
+  echo "${IP_ADDRESS} ${LINK_NAME}" >> /etc/hosts
+fi
+ip link set ${LINK_NAME} address ${NETWORK_HARDWARE_PREFIX}${HARDWARE_SUFFIX}
+ip link set dev ${LINK_NAME}-p master br-${NETWORK_NAME}
+ip addr add ${IP_ADDRESS}/24 dev ${LINK_NAME}
+ip link set dev ${LINK_NAME} up
+ip link set dev ${LINK_NAME}-p up
