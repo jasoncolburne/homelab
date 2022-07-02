@@ -20,8 +20,7 @@ sudo mkdir -p \
   /etc/$SERVICE \
   /var/lib/$SERVICE/venv \
   /var/lib/$SERVICE/src \
-  /var/lib/$SERVICE/patch \
-  /var/log/$SERVICE
+  /var/lib/$SERVICE/patch
 
 mkdir -p ~/src/openstack
 
@@ -73,7 +72,6 @@ sudo systemctl restart postgresql
 
 sudo chown -R $SERVICE:$SERVICE /etc/$SERVICE
 sudo chown -R $SERVICE:$SERVICE /var/lib/$SERVICE
-sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 
 HOST=$(hostname -f)
 
@@ -108,8 +106,7 @@ unset POSTGRES_PASSPHRASE
 
 sudo usermod -G $SERVICE,www-data $SERVICE
 
-sudo systemctl stop nginx
-sudo rm -f /etc/nginx/sites-enabled/default
+sudo systemctl stop nginx-ctrl
 
 sudo mkdir /var/log/nginx/$SERVICE
 sudo chown www-data:www-data /var/log/nginx/$SERVICE

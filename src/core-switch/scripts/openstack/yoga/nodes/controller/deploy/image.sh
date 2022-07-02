@@ -18,8 +18,7 @@ sudo mkdir -p \
   /etc/$SERVICE \
   /var/lib/$SERVICE/venv \
   /var/lib/$SERVICE/src \
-  /var/lib/$SERVICE/patch \
-  /var/log/$SERVICE
+  /var/lib/$SERVICE/patch
 
 mkdir -p ~/src/openstack
 
@@ -71,7 +70,6 @@ sudo systemctl restart postgresql
 
 sudo chown -R $SERVICE:$SERVICE /etc/$SERVICE
 sudo chown -R $SERVICE:$SERVICE /var/lib/$SERVICE
-sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 
 HOST=$(hostname -f)
 if [[ "$SERVICE" == "placement" ]]
@@ -88,13 +86,6 @@ openstack endpoint create --region $REGION $SERVICE_TYPE public https://$HOST:$S
 openstack endpoint create --region $REGION $SERVICE_TYPE internal https://$HOST:$SERVICE_PORT
 openstack endpoint create --region $REGION $SERVICE_TYPE admin https://$HOST:$SERVICE_PORT
 
-# set up quotas
-# Be sure to also set use_keystone_quotas=True in your $SERVICE-api.conf file.
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 1000 --region $REGION image_size_total
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 1000 --region $REGION image_stage_total
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 100 --region $REGION image_count_total
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 100 --region $REGION image_count_uploading
-
 sudo ip netns exec os-ctrl \
 sudo -u $SERVICE \
   SERVICE=$SERVICE \
@@ -110,12 +101,13 @@ sudo -u $SERVICE \
 unset SERVICE_PASSPHRASE
 unset POSTGRES_PASSPHRASE
 
+sudo sed -i "s/^#\?use_keystone_limits = .*$/use_keystone_limits = true/" /etc/${SERVICE}/${SERVICE}-api.conf
+
 # prepare for uwsgi and nginx configuration
 
 sudo usermod -G $SERVICE,www-data $SERVICE
 
-sudo systemctl stop nginx
-sudo rm -f /etc/nginx/sites-enabled/default
+sudo systemctl stop nginx-ctrl
 
 sudo mkdir /var/log/nginx/$SERVICE
 sudo chown www-data:www-data /var/log/nginx/$SERVICE
@@ -225,7 +217,7 @@ server {
 
     ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
-    client_max_body_size 4G;
+    client_max_body_size 1025M;
 
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE/socket;
@@ -238,4 +230,20 @@ EOF
 sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE.conf
 
 sudo systemctl restart nginx-ctrl
-sudo systemctl restart os-fwd-${SERVICE}
+# this is a pretty ugly hack - we need to restart all the other port forwarders
+# and don't have a list of installed services, we should track that
+sudo systemctl restart os-fwd-${SERVICE} os-fwd-keystone
+
+# set up quotas
+SCRIPT=$(cat << EOF
+unset OS_PROJECT_NAME OS_PROJECT_DOMAIN_NAME
+openstack --os-system-scope all registered limit create --service ${SERVICE} --default-limit 1000 image_size_total
+openstack --os-system-scope all registered limit create --service ${SERVICE} --default-limit 1000 image_stage_total
+openstack --os-system-scope all registered limit create --service ${SERVICE} --default-limit 100 image_count_total
+openstack --os-system-scope all registered limit create --service ${SERVICE} --default-limit 100 image_count_uploading
+EOF
+)
+
+bash -c "${SCRIPT}"
+
+openstack role add --user ${SERVICE} --user-domain Default --system all reader
