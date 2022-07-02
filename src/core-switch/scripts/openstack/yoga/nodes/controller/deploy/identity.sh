@@ -131,6 +131,8 @@ Environment='UWSGI_DEB_CONFNAME=${SERVICE}-admin' 'UWSGI_DEB_CONFNAMESPACE=app'
 ExecStartPre=mkdir -p /run/uwsgi/app/${SERVICE}-admin; chown ${SERVICE}:www-data /run/uwsgi/app/${SERVICE}-admin
 ExecStart=/usr/bin/uwsgi --ini /usr/share/uwsgi/conf/default.ini --ini /etc/uwsgi/apps-enabled/${SERVICE}-admin.ini
 ExecStopPost=rm -rf /run/uwsgi/app/${SERVICE}-admin
+KillSignal=SIGQUIT
+TimeoutStopSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -150,6 +152,8 @@ Environment='UWSGI_DEB_CONFNAME=${SERVICE}' 'UWSGI_DEB_CONFNAMESPACE=app'
 ExecStartPre=mkdir -p /run/uwsgi/app/${SERVICE}; chown ${SERVICE}:www-data /run/uwsgi/app/${SERVICE}
 ExecStart=/usr/bin/uwsgi --ini /usr/share/uwsgi/conf/default.ini --ini /etc/uwsgi/apps-enabled/${SERVICE}.ini
 ExecStopPost=rm -rf /run/uwsgi/app/${SERVICE}
+KillSignal=SIGQUIT
+TimeoutStopSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -184,8 +188,8 @@ sudo tee /etc/uwsgi/apps-available/$SERVICE.ini << EOF
 master = true
 plugin = python3
 thunder-lock = true
-processes = 3  
-threads = 2  
+processes = 3
+threads = 1
 chmod-socket = 660
 chown-socket = $SERVICE:www-data
 

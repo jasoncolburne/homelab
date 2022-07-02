@@ -90,11 +90,12 @@ ExecStart=/usr/bin/socat tcp4-listen:5000,fork,reuseaddr,bind=192.168.50.22 tcp4
 User=keystone
 Group=keystone
 SyslogIdentifier=os-api-forwarder
+SuccessExitStatus=143
 
 Restart=on-failure
 
 # Time to wait before forcefully stopped.
-TimeoutStopSec=300
+TimeoutStopSec=5
 
 [Install]
 WantedBy=multi-user.target

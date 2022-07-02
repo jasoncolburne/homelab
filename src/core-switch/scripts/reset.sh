@@ -13,6 +13,7 @@ NETWORK_DIR=${SCRIPTS_DIR}/network
 OPENSTACK_DIR=${SCRIPTS_DIR}/openstack/yoga
 SERVER_DIR=${SCRIPTS_DIR}/server
 
+sudo systemctl stop os-api-forwarder nginx-ctrl
 ${OPENSTACK_DIR}/reset.sh
 ${INFRASTRUCTURE_DIR}/down.sh
 sudo DEBUG=${DEBUG} ${NETWORK_DIR}/destroy.sh

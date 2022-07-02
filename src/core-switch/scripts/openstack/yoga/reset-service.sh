@@ -28,7 +28,6 @@ sudo userdel $SERVICE || true
 
 sudo systemctl daemon-reload
 sudo systemctl restart postgresql
-sudo systemctl start nginx-ctrl
 
 sudo -u postgres psql -q -c "DROP DATABASE $SERVICE"
 sudo -u postgres psql -q -c "DROP ROLE $SERVICE"
