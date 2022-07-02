@@ -16,7 +16,11 @@ git branch | rg debian-bullseye || git switch -c debian-bullseye
 # tox -e protection
 
 cp -R etc/* /etc/$SERVICE
-[[ -f ~/patch/$SERVICE.conf.patch ]] && patch -o /etc/$SERVICE/$SERVICE.conf /etc/$SERVICE/$SERVICE.conf.sample < ~/patch/$SERVICE.conf.patch
+if [[ -f ~/patch/$SERVICE.conf.patch ]]
+then
+  sed -i "s/POSTGRES_PASSPHRASE/${POSTGRES_PASSPHRASE}/" ~/patch/${SERVICE}.conf.patch
+  patch -o /etc/$SERVICE/$SERVICE.conf /etc/$SERVICE/$SERVICE.conf.sample < ~/patch/$SERVICE.conf.patch
+fi
 
 [[ -f /var/lib/$SERVICE/venv/bin/activate ]] || python3 -m venv /var/lib/$SERVICE/venv
 . /var/lib/$SERVICE/venv/bin/activate
@@ -33,8 +37,8 @@ $SERVICE-manage credential_setup
 # this is very keystone specific and will need to be abstracted
 $SERVICE-manage bootstrap \
   --bootstrap-password=$SERVICE_ADMIN_PASSPHRASE \
-  --bootstrap-admin-url https://$(hostname -f):$SERVICE_ADMIN_PORT/v3/ \
-  --bootstrap-internal-url https://$(hostname -f):$SERVICE_PORT/v3/ \
+  --bootstrap-admin-url https://os-ctrl-mgmt:$SERVICE_ADMIN_PORT/v3/ \
+  --bootstrap-internal-url https://os-ctrl-mgmt:$SERVICE_PORT/v3/ \
   --bootstrap-public-url https://$(hostname -f):$SERVICE_PORT/v3/ \
   --bootstrap-region-id $REGION
 

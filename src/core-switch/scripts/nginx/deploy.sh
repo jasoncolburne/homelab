@@ -86,9 +86,9 @@ After=nginx-ctrl.service
 [Service]
 Type=simple
 
-ExecStart=/usr/bin/socat -dddd tcp4-listen:5000,fork,reuseaddr,bind=192.168.50.22 tcp4:192.168.50.210:5000
-User=root
-Group=root
+ExecStart=/usr/bin/socat tcp4-listen:5000,fork,reuseaddr,bind=192.168.50.22 tcp4:os-ctrl-api:5000
+User=keystone
+Group=keystone
 SyslogIdentifier=os-api-forwarder
 
 Restart=on-failure

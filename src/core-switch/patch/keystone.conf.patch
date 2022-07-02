@@ -21,7 +21,7 @@
  # Deprecated group/name - [DATABASE]/sql_connection
  # Deprecated group/name - [sql]/connection
 -#connection = <None>
-+connection = postgresql+psycopg2:///keystone
++connection = postgresql+psycopg2://keystone:POSTGRES_PASSPHRASE@pgsql-infr/keystone
  
  # The SQLAlchemy connection string to use to connect to the slave database.
  # (string value)

@@ -89,20 +89,20 @@ create_virtual_network() {
   fi
 }
 
-OS_CTRL_ID=10
-OS_DASH_ID=11
-OS_NET_ID=12
-OS_COMP1_ID=13
-OS_COMP2_ID=14
+OS_CTRL_ID=10   # controller
+OS_DASH_ID=11   # dashboard
+OS_NET_ID=12    # network
+OS_COMP1_ID=13  # compute 1
+OS_COMP2_ID=14  # compute 2
+OS_STORE_ID=15  # storage
 
-AK_KAFKA_ID=15
-AK_ZOO_ID=16
+AK_KAFKA_ID=20  # kafka
+AK_ZOO_ID=21    # zookeeper
+AMQP_ID=22      # rabbitmq running amqp 1.0
+MEM_ID=23       # memcached
+PGSQL_ID=24     # postgresql
 
-AMQP_ID=17
-
-PGSQL_ID=18
-
-HOST_ID=19
+HOST_ID=30
 
 # the above ids generate input for the last octet of the ip and virtual hardware
 # addresses associated with each node.
@@ -128,7 +128,7 @@ HOST_ID=19
 NETWORK_NAME=mgmt
 NETWORK_IPV4_PREFIX=10.0.2.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:02:
-NODES=(os-ctrl os-dash os-net os-comp1 os-comp2)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-store)
 ASSIGN_IPS=1
 ADD_DEFAULT_ROUTES=0
 FORCED_BRIDGE_IP=
@@ -137,7 +137,7 @@ create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HAR
 NETWORK_NAME=infr
 NETWORK_IPV4_PREFIX=10.0.4.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:04:
-NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 ak-kafka ak-zoo amqp pgsql)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-store ak-kafka ak-zoo amqp pgsql mem)
 ASSIGN_IPS=1
 ADD_DEFAULT_ROUTES=0
 FORCED_BRIDGE_IP=
@@ -146,7 +146,7 @@ create_virtual_network "${NETWORK_NAME}" "${NETWORK_IPV4_PREFIX}" "${NETWORK_HAR
 NETWORK_NAME=data
 NETWORK_IPV4_PREFIX=10.0.8.
 NETWORK_HARDWARE_PREFIX=de:ad:be:ef:08:
-NODES=(os-net os-comp1 os-comp2)
+NODES=(os-net os-comp1 os-comp2 os-store)
 ASSIGN_IPS=0
 ADD_DEFAULT_ROUTES=0
 FORCED_BRIDGE_IP=
@@ -221,3 +221,6 @@ ip link set dev ${LINK_NAME}-p master br-${NETWORK_NAME}
 ip addr add ${IP_ADDRESS}/24 dev ${LINK_NAME}
 ip link set dev ${LINK_NAME} up
 ip link set dev ${LINK_NAME}-p up
+
+PUBLIC_IP=$(ip addr show dev veth0 | head -n3 | tail -n1 | cut -d'/' -f1 | cut -d' ' -f6)
+sudo sed -i "s/^.*$(hostname -f)\t$(hostname)/${PUBLIC_IP} $(hostname -f) $(hostname)/" /etc/hosts

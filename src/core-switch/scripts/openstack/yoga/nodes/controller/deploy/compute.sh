@@ -7,8 +7,10 @@ else
   set -euo pipefail
 fi
 
-sudo ~/install/scripts/openstack/yoga/dependencies/common.sh
-[[ -f ~/install/scripts/openstack/yoga/dependencies/$SERVICE.sh ]] && sudo ~/install/scripts/openstack/yoga/dependencies/$SERVICE.sh
+CONTROLLER_DIR=~/install/scripts/openstack/yoga/nodes/controller
+DEPENDENCY_DIR=${CONTROLLER_DIR}/dependencies
+sudo ${DEPENDENCY_DIR}/common.sh
+sudo ${DEPENDENCY_DIR}/compute.sh
 
 sudo mkdir -p \
   /etc/$SERVICE \
@@ -25,7 +27,7 @@ cd ~/src/openstack
 
 [[ $REBUILD == "1" ]] && sudo rm -rf /var/lib/$SERVICE/src/$SERVICE
 sudo cp -R ~/src/openstack/$SERVICE /var/lib/$SERVICE/src
-[[ -f ~/install/patch/$SERVICE.conf.patch ]] && sudo cp ~/install/patch/$SERVICE.conf.patch /var/lib/$SERVICE/patch
+sudo cp ~/install/patch/$SERVICE*.conf.patch /var/lib/$SERVICE/patch || true
 
 # this is actually flawed but we won't see a problem
 if rg -qF $SERVICE /etc/passwd
@@ -61,36 +63,34 @@ sudo chown -R $SERVICE:$SERVICE /var/lib/$SERVICE
 sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 
 HOST=$(hostname -f)
+SERVICE_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
 
-if [[ $SERVICE_ADMIN_PORT != disabled ]]
-then
-  SERVICE_ADMIN_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
-  cat > ~/.openrc-admin << EOF
-export OS_PROJECT_DOMAIN_NAME=Default
-export OS_USER_DOMAIN_NAME=Default
-export OS_PROJECT_NAME=admin
-export OS_USERNAME=admin
-export OS_PASSWORD=$SERVICE_ADMIN_PASSPHRASE
-export OS_AUTH_URL=https://$HOST:35357/v3
-export OS_IDENTITY_API_VERSION=3
-export OS_IMAGE_API_VERSION=2
-EOF
-else
-  # gross
-  SERVICE_ADMIN_PASSPHRASE=
-fi
+. ~/.openrc-admin
+openstack user create --domain default $SERVICE --password=$SERVICE_PASSPHRASE
+openstack role add --project service --user $SERVICE admin
+openstack service create --name $SERVICE --description "$DESCRIPTION" $SERVICE_TYPE
+openstack endpoint create --region $REGION $SERVICE_TYPE public https://$HOST:$SERVICE_PORT
+openstack endpoint create --region $REGION $SERVICE_TYPE internal https://$HOST:$SERVICE_PORT
+openstack endpoint create --region $REGION $SERVICE_TYPE admin https://$HOST:$SERVICE_PORT
+
+# set up quotas
+# Be sure to also set use_keystone_quotas=True in your $SERVICE-api.conf file.
+# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 1000 --region $REGION image_size_total
+# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 1000 --region $REGION image_stage_total
+# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 100 --region $REGION image_count_total
+# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 100 --region $REGION image_count_uploading
 
 sudo -u $SERVICE \
   SERVICE=$SERVICE \
   SERVICE_PORT=$SERVICE_PORT \
-  SERVICE_ADMIN_PORT=$SERVICE_ADMIN_PORT \
-  SERVICE_ADMIN_PASSPHRASE=$SERVICE_ADMIN_PASSPHRASE \
+  SERVICE_PASSPHRASE=$SERVICE_PASSPHRASE \
+  KEYSTONE_HOST=$KEYSTONE_HOST \
+  KEYSTONE_PORT=$KEYSTONE_PORT \
+  MEMCACHE_PORT=$MEMCACHE_PORT \
   REBUILD=$REBUILD \
-  REGION=$REGION \
-  DEBUG=$DEBUG \
-  ~/install/scripts/openstack/yoga/install-identity-service.sh
+  ~/install/scripts/openstack/yoga/install-api-service.sh
 
-unset SERVICE_ADMIN_PASSPHRASE
+unset SERVICE_PASSPHRASE
 
 # prepare for uwsgi and nginx configuration
 
@@ -105,35 +105,9 @@ sudo mkdir /var/www/$SERVICE
 
 # uwsgi
 
-if [[ $SERVICE_ADMIN_PORT != disabled ]]
-then
-  sudo bash -c "cat > /etc/uwsgi/apps-available/$SERVICE-admin.ini" << EOF
-[uwsgi]
-master = true
-plugin = python3
-thunder-lock = true
-processes = 5
-threads = 2
-chmod-socket = 660
-chown-socket = $SERVICE:www-data
-
-name = $SERVICE
-uid = $SERVICE
-gid = www-data
-
-chdir = /var/www/$SERVICE/  
-virtualenv = /var/lib/$SERVICE/venv
-wsgi-file = /var/lib/$SERVICE/venv/bin/$SERVICE-wsgi-admin
-
-no-orphans = true
-vacuum = true
-EOF
-
-  sudo ln -s /etc/uwsgi/apps-{available,enabled}/$SERVICE-admin.ini
-fi
-
 sudo bash -c "cat > /etc/uwsgi/apps-available/$SERVICE.ini" << EOF
 [uwsgi]
+env = REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
 master = true
 plugin = python3
 thunder-lock = true
@@ -148,7 +122,7 @@ gid = www-data
 
 chdir = /var/www/$SERVICE/
 virtualenv = /var/lib/$SERVICE/venv
-wsgi-file = /var/lib/$SERVICE/venv/bin/$SERVICE-wsgi-public
+wsgi-file = /var/lib/$SERVICE/venv/bin/$WSGI_SCRIPT
 
 no-orphans = true
 vacuum = true
@@ -185,41 +159,12 @@ server {
 
     ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
+    client_max_body_size 4G;
+
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE/socket;
         include       uwsgi_params;
-    }
-}
-EOF
-
-[[ $SERVICE_ADMIN_PORT == disabled ]] || sudo bash -c "cat >> /etc/nginx/sites-available/$SERVICE.conf" << EOF
-server {
-    listen      $SERVICE_ADMIN_PORT ssl;
-    access_log  /var/log/nginx/$SERVICE/access.log;
-    error_log   /var/log/nginx/$SERVICE/error.log;
-
-    ssl_certificate     /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
-
-    ssl_protocols TLSv1.3;
-    ssl_prefer_server_ciphers on;
-    ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
-    ssl_ecdh_curve secp384r1;
-    ssl_session_cache shared:SSL:10m;
-    ssl_session_tickets off;
-    ssl_stapling on;
-    ssl_stapling_verify on;
-    resolver 8.8.8.8 8.8.4.4 valid=300s;
-    resolver_timeout 5s;
-    add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
-
-    ssl_dhparam /etc/ssl/certs/dhparam.pem;
-
-    location / {
-        uwsgi_pass    unix:///run/uwsgi/app/$SERVICE-admin/socket;
-        include       uwsgi_params;
+        uwsgi_param   SCRIPT_NAME '';
     }
 }
 EOF
@@ -245,15 +190,4 @@ then
   sudo mv $HOST-key.pem /etc/nginx/ssl/key.pem
 fi
 
-# sudo mkdir -p /usr/local/share/ca-certificates/
-# sudo cp -R 
-
 sudo systemctl restart nginx
-
-. ~/.openrc-admin
-openstack project create --domain default --description "Service Project" service
-
-# cleanup
-
-# sudo rm -rf /var/lib/$SERVICE/src
-# sudo rm -rf /var/lib/$SERVICE/patch

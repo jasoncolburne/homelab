@@ -57,4 +57,24 @@ OOMScoreAdjust=-900
 WantedBy=multi-user.target
 EOF
 
+sudo mkcert -ecdsa pgsql-infr
+sudo chown postgres:postgres pgsql-infr*
+sudo mv pgsql-infr* /etc/postgresql/13/main
+sudo sed -i "s/^#\?listen_addresses = .*$/listen_addresses = pgsql-infr/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?password_encryption = .*$/password_encryption = scram-sha-256/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?ssl_cert_file = .*$/ssl_cert_file = '\/etc\/postgresql\/13\/main\/pgsql-infr.pem'/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?ssl_key_file = .*$/ssl_key_file = '\/etc\/postgresql\/13\/main\/pgsql-infr-key.pem'/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?ssl_ciphers = .*$/ssl_ciphers = 'HIGH:\!aNULL'/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?ssl_prefer_server_ciphers = .*$/ssl_prefer_server_ciphers = on/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?ssl_ecdh_curve = .*$/ssl_ecdh_curve = 'prime256v1'/" /etc/postgresql/13/main/postgresql.conf
+sudo sed -i "s/^#\?ssl_min_protocol_version = .*$/ssl_min_protocol_version = 'TLSv1.3'/" /etc/postgresql/13/main/postgresql.conf
+
+
+#ssl_crl_file = ''
+#ssl_min_protocol_version = 'TLSv1.2'
+#ssl_max_protocol_version = ''
+#ssl_dh_params_file = ''
+#ssl_passphrase_command = ''
+#ssl_passphrase_command_supports_reload = off
+
 sudo systemctl daemon-reload

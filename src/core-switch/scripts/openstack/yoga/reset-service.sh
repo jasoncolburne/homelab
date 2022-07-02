@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-sudo systemctl stop nginx
-sudo systemctl stop uwsgi
+sudo systemctl stop os-api-forwarder nginx-ctrl uwsgi-${SERVICE} uwsgi-${SERVICE}-admin
 
 sudo rm -rf \
   /etc/$SERVICE \
@@ -12,8 +11,8 @@ sudo rm -rf \
   /var/www/$SERVICE
 
 sudo rm -f \
-  /etc/nginx/sites-enabled/$SERVICE* \
-  /etc/nginx/sites-available/$SERVICE* \
+  /etc/nginx/ctrl/sites-enabled/$SERVICE* \
+  /etc/nginx/ctrl/sites-available/$SERVICE* \
   /etc/uwsgi/apps-enabled/$SERVICE* \
   /etc/uwsgi/apps-available/$SERVICE* \
   /var/log/uwsgi/apps/$SERVICE* \
@@ -21,8 +20,12 @@ sudo rm -f \
 
 sudo -u postgres psql -q -c "DROP DATABASE $SERVICE"
 sudo -u postgres psql -q -c "DROP ROLE $SERVICE"
+sudo cat /etc/postgresql/13/main/pg_hba.conf | rg -v "^hostssl ${SERVICE}" > ~/pg_hba.conf
+sudo mv -v ~/pg_hba.conf /etc/postgresql/13/main
+sudo chown postgres:postgres /etc/postgresql/13/main/pg_hba.conf
+sudo chmod 640 /etc/postgresql/13/main/pg_hba.conf
 
 sudo userdel $SERVICE
 
-sudo systemctl start uwsgi
-sudo systemctl start nginx
+sudo systemctl restart postgresql
+sudo systemctl start nginx-ctrl

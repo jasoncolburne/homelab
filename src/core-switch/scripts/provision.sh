@@ -13,7 +13,8 @@ sudo apt-get -y install \
   clevis-tpm2 \
   clevis-luks \
   clevis-dracut \
-  sbsigntool
+  sbsigntool \
+  socat
 
 # sudo apt-get -y --no-install-recommends install firejail/bullseye-backports
 
