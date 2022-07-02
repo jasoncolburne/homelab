@@ -94,7 +94,7 @@ OS_DASH_ID=11   # dashboard
 OS_NET_ID=12    # network
 OS_COMP1_ID=13  # compute 1
 OS_COMP2_ID=14  # compute 2
-OS_VOL_ID=15  # storage
+OS_VOL_ID=15    # volume
 
 AK_KAFKA_ID=20  # kafka
 AK_ZOO_ID=21    # zookeeper
