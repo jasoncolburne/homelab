@@ -230,9 +230,10 @@ EOF
 sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE.conf
 
 sudo systemctl restart nginx-ctrl
-# this is a pretty ugly hack - we need to restart all the other port forwarders
-# and don't have a list of installed services, we should track that
-sudo systemctl restart os-fwd-${SERVICE} os-fwd-keystone
+for FORWARDER_PATH in /lib/systemd/system/os-fwd-*
+do
+  sudo systemctl restart $(basename $FORWARDER_PATH)
+done
 
 # set up quotas
 SCRIPT=$(cat << EOF

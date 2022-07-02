@@ -335,7 +335,10 @@ sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE-internal.conf
 sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE-admin.conf
 
 sudo systemctl restart nginx-ctrl
-sudo systemctl restart os-fwd-${SERVICE}
+for FORWARDER_PATH in /lib/systemd/system/os-fwd-*
+do
+  sudo systemctl restart $(basename $FORWARDER_PATH)
+done
 
 source ~/.openrc-admin
 openstack project create --domain default --description "Service Project" service

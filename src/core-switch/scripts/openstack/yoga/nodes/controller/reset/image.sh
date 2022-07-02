@@ -6,7 +6,6 @@ sudo systemctl stop os-fwd-${SERVICE} nginx-ctrl uwsgi-${SERVICE} || true
 
 sudo rm -rf \
   /etc/$SERVICE \
-  /var/log/$SERVICE \
   /var/log/nginx/$SERVICE \
   /var/www/$SERVICE
 
@@ -17,7 +16,8 @@ sudo rm -f \
   /etc/uwsgi/apps-available/$SERVICE* \
   /var/log/uwsgi/apps/$SERVICE* \
   /var/lib/$SERVICE/images/* \
-  /lib/systemd/system/uwsgi-${SERVICE}*
+  /lib/systemd/system/uwsgi-${SERVICE}* \
+  /lib/systemd/system/os-fwd-${SERVICE}*
 
 sudo cat /etc/postgresql/13/main/pg_hba.conf | rg -v "^hostssl ${SERVICE}" > ~/pg_hba.conf
 sudo mv -v ~/pg_hba.conf /etc/postgresql/13/main
