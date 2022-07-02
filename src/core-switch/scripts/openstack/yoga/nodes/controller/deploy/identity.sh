@@ -240,8 +240,8 @@ server {
     access_log  /var/log/nginx/$SERVICE/public.access.log;
     error_log   /var/log/nginx/$SERVICE/public.error.log;
 
-    ssl_certificate     /etc/nginx/ssl/core.homelab.pem;
-    ssl_certificate_key /etc/nginx/ssl/core.homelab-key.pem;
+    ssl_certificate     /etc/nginx/ssl/$(hostname -f).pem;
+    ssl_certificate_key /etc/nginx/ssl/$(hostname -f)-key.pem;
 
     ssl_protocols TLSv1.3;
     ssl_prefer_server_ciphers on;

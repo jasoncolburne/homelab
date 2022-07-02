@@ -89,7 +89,7 @@ enable_isolated_metadata = true
 EOF
 
 [[ -f /var/lib/$SERVICE/venv/bin/activate ]] || python3 -m venv /var/lib/$SERVICE/venv
-. /var/lib/$SERVICE/venv/bin/activate
+source /var/lib/$SERVICE/venv/bin/activate
 
 pip install -r requirements.txt
 # requirements for our setup

@@ -50,7 +50,7 @@
  # Deprecated group/name - [DATABASE]/sql_connection
  # Deprecated group/name - [sql]/connection
 -#connection = <None>
-+connection = postgresql+psycopg2:///nova_api
++connection = postgresql+psycopg2://nova:POSTGRES_PASSPHRASE@pgsql-infr/nova_api
  
  # The SQLAlchemy connection string to use to connect to the slave database
  # (string value)
@@ -68,7 +68,7 @@
  # Deprecated group/name - [DATABASE]/sql_connection
  # Deprecated group/name - [sql]/connection
 -#connection = <None>
-+connection = postgresql+psycopg2:///nova
++connection = postgresql+psycopg2://nova:POSTGRES_PASSPHRASE@pgsql-infr/nova
  
  # The SQLAlchemy connection string to use to connect to the slave database
  # (string value)
@@ -95,7 +95,7 @@
  # undefined, tokens will instead be cached in-process (list value)
  # Deprecated group/name - [keystone_authtoken]/memcache_servers
 -#memcached_servers = <None>
-+memcached_servers = SERVICE_INSTALL_KEYSTONE_HOST:SERVICE_INSTALL_MEMCACHE_PORT
++memcached_servers = mem-infr:SERVICE_INSTALL_MEMCACHE_PORT
  
  # In order to prevent excessive effort spent validating tokens, the middleware
  # caches previously-seen tokens for a configurable duration (in seconds). Set to
@@ -295,13 +295,13 @@
  # incoming VNC connection requests on this node.
  #  (host address value)
 -#server_listen = 127.0.0.1
-+server_listen = SERVICE_INSTALL_HOST_IP
++server_listen = os-ctrl-mgmt
  
  #
  # Private, internal IP address or hostname of VNC console proxy. For more
  # information, refer to the documentation. (host address value)
 -#server_proxyclient_address = 127.0.0.1
-+server_proxyclient_address = SERVICE_INSTALL_HOST_IP
++server_proxyclient_address = os-ctrl-mgmt
  
  #
  # Public address of noVNC VNC console proxy. For more information, refer to the

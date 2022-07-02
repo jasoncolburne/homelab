@@ -20,3 +20,5 @@ do
   SERVICE=$(basename ${SERVICE_PATH})
   sudo systemctl stop ${SERVICE}
 done
+
+sudo systemctl stop nova-scheduler nova-conductor

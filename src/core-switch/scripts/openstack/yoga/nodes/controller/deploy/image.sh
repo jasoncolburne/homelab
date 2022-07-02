@@ -169,7 +169,7 @@ master = true
 plugin = python3
 thunder-lock = true
 processes = 3  
-threads = 2  
+threads = 1
 chmod-socket = 660
 chown-socket = $SERVICE:www-data
 
@@ -198,8 +198,8 @@ server {
     access_log  /var/log/nginx/$SERVICE/access.log;
     error_log   /var/log/nginx/$SERVICE/error.log;
 
-    ssl_certificate     /etc/nginx/ssl/core.homelab.pem;
-    ssl_certificate_key /etc/nginx/ssl/core.homelab-key.pem;
+    ssl_certificate     /etc/nginx/ssl/$(hostname -f).pem;
+    ssl_certificate_key /etc/nginx/ssl/$(hostname -f)-key.pem;
 
     ssl_protocols TLSv1.3;
     ssl_prefer_server_ciphers on;

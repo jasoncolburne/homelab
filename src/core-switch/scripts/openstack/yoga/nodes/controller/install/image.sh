@@ -25,7 +25,7 @@ sed -i "s/SERVICE_INSTALL_MEMCACHE_PORT/$MEMCACHE_PORT/g" /etc/$SERVICE/${SERVIC
 sed -i "s/SERVICE_INSTALL_SERVICE_PASSPHRASE/$SERVICE_PASSPHRASE/g" /etc/$SERVICE/${SERVICE}-api.conf
 
 [[ -f /var/lib/$SERVICE/venv/bin/activate ]] || python3 -m venv /var/lib/$SERVICE/venv
-. /var/lib/$SERVICE/venv/bin/activate
+source /var/lib/$SERVICE/venv/bin/activate
 
 pip install -r requirements.txt
 # requirements for our setup

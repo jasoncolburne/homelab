@@ -10,7 +10,7 @@ fi
 SCRIPTS_DIR=~/install/scripts
 INFRASTRUCTURE_DIR=${SCRIPTS_DIR}/infrastructure
 
-TARGETS=(kafka memcached postgres rabbitmq)
+TARGETS=(kafka memcached postgres rabbitmq libvirtd)
 
 for TARGET in "${TARGETS[@]}"
 do

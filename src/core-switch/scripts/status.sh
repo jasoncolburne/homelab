@@ -11,13 +11,17 @@ sudo systemctl status \
   os-fwd-keystone \
   os-fwd-glance \
   os-fwd-placement \
+  os-fwd-nova \
   nginx-ctrl \
   uwsgi-keystone \
   uwsgi-keystone-admin \
   uwsgi-glance \
   uwsgi-placement \
+  uwsgi-nova \
+  nova-scheduler \
+  nova-conductor \
+  memcached \
+  rabbitmq-server \
   zookeeper \
   kafka \
-  memcached \
   postgresql \
-  rabbitmq-server

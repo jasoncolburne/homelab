@@ -7,4 +7,6 @@ else
   set -euo pipefail
 fi
 
-sudo systemctl restart libvirtd zookeeper kafka memcached postgresql rabbitmq-server
+SCRIPTS_DIR=~/install/scripts
+${SCRIPTS_DIR}/down.sh
+${SCRIPTS_DIR}/up.sh

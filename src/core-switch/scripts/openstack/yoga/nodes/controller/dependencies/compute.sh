@@ -2,6 +2,4 @@
 
 set -euo pipefail
 
-apt-get -y install \
-  libvirt-daemon-system \
-  libvirt-dev
+apt-get -y install libvirt-dev

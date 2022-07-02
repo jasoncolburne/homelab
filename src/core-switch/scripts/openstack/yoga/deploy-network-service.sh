@@ -64,7 +64,7 @@ sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 HOST=$(hostname -f)
 SERVICE_PASSPHRASE=$NEUTRON_PASSPHRASE
 
-. ~/.openrc-admin
+source ~/.openrc-admin
 openstack user create --domain default $SERVICE --password=$SERVICE_PASSPHRASE
 openstack role add --project service --user $SERVICE admin
 openstack service create --name $SERVICE --description "$DESCRIPTION" $SERVICE_TYPE

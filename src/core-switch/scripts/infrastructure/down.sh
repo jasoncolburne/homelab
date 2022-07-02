@@ -7,4 +7,4 @@ else
   set -euo pipefail
 fi
 
-sudo systemctl stop kafka zookeeper memcached postgresql rabbitmq-server epmd
+sudo systemctl stop kafka zookeeper memcached postgresql rabbitmq-server epmd libvirtd
