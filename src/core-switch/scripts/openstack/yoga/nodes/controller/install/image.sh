@@ -10,19 +10,12 @@ fi
 cd ~/src/$SERVICE
 git branch | rg debian-bullseye || git switch -c debian-bullseye
 
-if [[ -d etc/$SERVICE ]]
-then
-  SOURCE_CONFIG_PATH=etc/$SERVICE
-else
-  SOURCE_CONFIG_PATH=etc
-fi
-
-( ([[ ! -f $SOURCE_CONFIG_PATH/$SERVICE.conf.sample ]] && [[ ! -f $SOURCE_CONFIG_PATH/$SERVICE-api.conf.sample ]]) || [[ $REBUILD == "1" ]] ) && tox -e genconfig
-([[ ! -f $SOURCE_CONFIG_PATH/policy.yaml.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genpolicy
+([[ ! -f etc/$SERVICE-api.conf.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genconfig
+([[ ! -f etc/policy.yaml.sample ]] || [[ $REBUILD == "1" ]]) && tox -e genpolicy
 # tox -e docs
 # tox -e protection
 
-cp -R $SOURCE_CONFIG_PATH/* /etc/$SERVICE
+cp -R etc/* /etc/$SERVICE
 
 patch -o /etc/$SERVICE/${SERVICE}-api.conf /etc/$SERVICE/${SERVICE}-api.conf.sample < ~/patch/${SERVICE}-api.conf.patch
 sed -i "s/POSTGRES_PASSPHRASE/${POSTGRES_PASSPHRASE}/g" /etc/$SERVICE/${SERVICE}-api.conf
@@ -39,6 +32,6 @@ pip install -r requirements.txt
 pip install psycopg2 python-memcached
 python3 setup.py install
 
-$SERVICE-manage db_sync || $SERVICE-manage db sync
+$SERVICE-manage db_sync
 
 deactivate

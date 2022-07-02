@@ -32,7 +32,7 @@
  # undefined, tokens will instead be cached in-process. (list value)
  # Deprecated group/name - [keystone_authtoken]/memcache_servers
 -#memcached_servers = <None>
-+memcached_servers = SERVICE_INSTALL_KEYSTONE_HOST:SERVICE_INSTALL_MEMCACHE_PORT
++memcached_servers = mem-infr:SERVICE_INSTALL_MEMCACHE_PORT
  
  # In order to prevent excessive effort spent validating tokens, the middleware
  # caches previously-seen tokens for a configurable duration (in seconds). Set to
@@ -68,7 +68,7 @@
  # The SQLAlchemy connection string to use to connect to the database. (string
  # value)
 -#connection = <None>
-+connection = postgresql+psycopg2:///placement
++connection = postgresql+psycopg2://placement:POSTGRES_PASSPHRASE@pgsql-infr/placement
  
  # Optional URL parameters to append onto the connection URL at connect time;
  # specify as param1=value1&param2=value2&... (string value)

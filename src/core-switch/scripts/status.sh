@@ -8,12 +8,14 @@ else
 fi
 
 sudo systemctl status \
+  os-fwd-keystone \
+  os-fwd-glance \
+  os-fwd-placement \
+  nginx-ctrl \
   uwsgi-keystone \
   uwsgi-keystone-admin \
   uwsgi-glance \
-  nginx-ctrl \
-  os-fwd-keystone \
-  os-fwd-glance \
+  uwsgi-placement \
   zookeeper \
   kafka \
   memcached \

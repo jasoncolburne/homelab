@@ -7,13 +7,16 @@ else
   set -euo pipefail
 fi
 
-sudo systemctl stop \
-  os-fwd-keystone \
-  os-fwd-glance
+for SERVICE_PATH in /lib/systemd/system/os-fwd-*
+do
+  SERVICE=$(basename ${SERVICE_PATH})
+  sudo systemctl stop ${SERVICE}
+done
 
 sudo systemctl stop nginx-ctrl
 
-sudo systemctl stop \
-  uwsgi-keystone \
-  uwsgi-keystone-admin \
-  uwsgi-glance
+for SERVICE_PATH in /lib/systemd/system/uwsgi-*
+do
+  SERVICE=$(basename ${SERVICE_PATH})
+  sudo systemctl stop ${SERVICE}
+done

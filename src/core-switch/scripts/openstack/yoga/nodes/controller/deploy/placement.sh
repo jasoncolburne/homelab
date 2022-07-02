@@ -7,16 +7,19 @@ else
   set -euo pipefail
 fi
 
-sudo ~/install/scripts/openstack/yoga/dependencies/common.sh
-[[ -f ~/install/scripts/openstack/yoga/dependencies/$SERVICE.sh ]] && sudo ~/install/scripts/openstack/yoga/dependencies/$SERVICE.sh
+NODE_API_IP_ADDRESS=$(rg os-ctrl-api /etc/hosts | cut -d " " -f1)
+NODE_INFR_IP_ADDRESS=$(rg os-ctrl-infr /etc/hosts | cut -d " " -f1)
+
+CONTROLLER_DIR=~/install/scripts/openstack/yoga/nodes/controller
+DEPENDENCY_DIR=${CONTROLLER_DIR}/dependencies
+sudo ${DEPENDENCY_DIR}/common.sh
+sudo ${DEPENDENCY_DIR}/placement.sh
 
 sudo mkdir -p \
   /etc/$SERVICE \
   /var/lib/$SERVICE/venv \
   /var/lib/$SERVICE/src \
-  /var/lib/$SERVICE/patch \
-  /var/log/$SERVICE \
-  /run/uwsgi/$SERVICE
+  /var/lib/$SERVICE/patch
 
 mkdir -p ~/src/openstack
 
@@ -40,6 +43,7 @@ else
     $SERVICE
 fi
 
+POSTGRES_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
 echo "SELECT 'CREATE DATABASE $SERVICE' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$SERVICE')\gexec" | sudo -u postgres psql -q
 sudo -u postgres psql -q << PLPGSQL
 DO
@@ -49,16 +53,24 @@ BEGIN
     SELECT FROM pg_catalog.pg_roles
     WHERE  rolname = '$SERVICE') THEN
 
-    CREATE ROLE $SERVICE LOGIN;
+    CREATE ROLE $SERVICE LOGIN PASSWORD '${POSTGRES_PASSPHRASE}';
   END IF;
 END
 \$do\$;
 PLPGSQL
 sudo -u postgres psql -q -c "GRANT ALL PRIVILEGES ON DATABASE $SERVICE TO $SERVICE;"
 
+if sudo rg "hostssl.+${SERVICE}" /etc/postgresql/13/main/ph_hba.conf
+then
+  sudo sed -i "s/^hostssl.+${SERVICE}.+$/hostssl ${SERVICE} ${SERVICE} ${NODE_INFR_IP_ADDRESS}\/32 scram-sha-256/" /etc/postgresql/13/main/pg_hba.conf
+else
+  echo "hostssl ${SERVICE} ${SERVICE} ${NODE_INFR_IP_ADDRESS}/32 scram-sha-256" | sudo tee -a /etc/postgresql/13/main/pg_hba.conf
+fi
+
+sudo systemctl restart postgresql
+
 sudo chown -R $SERVICE:$SERVICE /etc/$SERVICE
 sudo chown -R $SERVICE:$SERVICE /var/lib/$SERVICE
-sudo chown -R $SERVICE:$SERVICE /var/log/$SERVICE
 
 HOST=$(hostname -f)
 if [[ "$SERVICE" == "placement" ]]
@@ -67,7 +79,7 @@ then
 else
   SERVICE_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
 fi
-. ~/.openrc-admin
+source ~/.openrc-admin
 openstack user create --domain default $SERVICE --password=$SERVICE_PASSPHRASE
 openstack role add --project service --user $SERVICE admin
 openstack service create --name $SERVICE --description "$DESCRIPTION" $SERVICE_TYPE
@@ -75,37 +87,79 @@ openstack endpoint create --region $REGION $SERVICE_TYPE public https://$HOST:$S
 openstack endpoint create --region $REGION $SERVICE_TYPE internal https://$HOST:$SERVICE_PORT
 openstack endpoint create --region $REGION $SERVICE_TYPE admin https://$HOST:$SERVICE_PORT
 
-# set up quotas
-# Be sure to also set use_keystone_quotas=True in your $SERVICE-api.conf file.
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 1000 --region $REGION image_size_total
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 1000 --region $REGION image_stage_total
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 100 --region $REGION image_count_total
-# openstack --os-cloud devstack-system-admin registered limit create --service $SERVICE --default-limit 100 --region $REGION image_count_uploading
-
+sudo ip netns exec os-ctrl \
 sudo -u $SERVICE \
   SERVICE=$SERVICE \
   SERVICE_PORT=$SERVICE_PORT \
   SERVICE_PASSPHRASE=$SERVICE_PASSPHRASE \
+  POSTGRES_PASSPHRASE=$POSTGRES_PASSPHRASE \
   KEYSTONE_HOST=$KEYSTONE_HOST \
   KEYSTONE_PORT=$KEYSTONE_PORT \
   MEMCACHE_PORT=$MEMCACHE_PORT \
   REBUILD=$REBUILD \
-  ~/install/scripts/openstack/yoga/install-api-service.sh
+  ~/install/scripts/openstack/yoga/nodes/controller/install/placement.sh
 
 unset SERVICE_PASSPHRASE
+unset POSTGRES_PASSPHRASE
 
 # prepare for uwsgi and nginx configuration
 
 sudo usermod -G $SERVICE,www-data $SERVICE
 
-sudo systemctl stop nginx
-sudo rm -f /etc/nginx/sites-enabled/default
+sudo systemctl stop nginx-ctrl
 
 sudo mkdir /var/log/nginx/$SERVICE
 sudo chown www-data:www-data /var/log/nginx/$SERVICE
 sudo mkdir /var/www/$SERVICE
 
+# port forwarder
+HOST_IP_ADDRESS=$(rg core\\.homelab /etc/hosts | cut -d " " -f1)
+sudo tee /lib/systemd/system/os-fwd-${SERVICE}.service << EOF
+[Unit]
+Description=${SERVICE} API forwarder
+After=network-online.target
+Requires=nginx-ctrl.service
+After=nginx-ctrl.service
+
+[Service]
+Type=simple
+
+ExecStart=/usr/bin/socat tcp4-listen:${SERVICE_PORT},fork,reuseaddr,bind=${HOST_IP_ADDRESS} tcp4:os-ctrl-api:${SERVICE_PORT}
+User=${SERVICE}
+Group=${SERVICE}
+SyslogIdentifier=os-fwd-${SERVICE}
+SuccessExitStatus=143
+
+Restart=on-failure
+
+# Time to wait before forcefully stopped.
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # uwsgi
+sudo tee /lib/systemd/system/uwsgi-${SERVICE}.service << EOF
+[Unit]
+Description=${SERVICE} uWSGI server
+After=postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+NetworkNamespacePath=/run/netns/os-ctrl
+Restart=on-failure
+Environment='UWSGI_DEB_CONFNAME=${SERVICE}' 'UWSGI_DEB_CONFNAMESPACE=app'
+ExecStartPre=mkdir -p /run/uwsgi/app/${SERVICE}; chown ${SERVICE}:www-data /run/uwsgi/app/${SERVICE}
+ExecStart=/usr/bin/uwsgi --ini /usr/share/uwsgi/conf/default.ini --ini /etc/uwsgi/apps-enabled/${SERVICE}.ini
+ExecStopPost=rm -rf /run/uwsgi/app/${SERVICE}
+KillSignal=SIGQUIT
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 sudo bash -c "cat > /etc/uwsgi/apps-available/$SERVICE.ini" << EOF
 [uwsgi]
@@ -132,18 +186,19 @@ EOF
 
 sudo ln -s /etc/uwsgi/apps-{available,enabled}/$SERVICE.ini
 
-sudo systemctl restart uwsgi
+sudo systemctl daemon-reload
+sudo systemctl restart uwsgi-${SERVICE}
 
 # nginx
 
-sudo bash -c "cat > /etc/nginx/sites-available/$SERVICE.conf" << EOF
+sudo bash -c "cat > /etc/nginx/ctrl/sites-available/$SERVICE.conf" << EOF
 server {
-    listen      $SERVICE_PORT ssl;
+    listen      ${NODE_API_IP_ADDRESS}:$SERVICE_PORT ssl;
     access_log  /var/log/nginx/$SERVICE/access.log;
     error_log   /var/log/nginx/$SERVICE/error.log;
 
-    ssl_certificate     /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
+    ssl_certificate     /etc/nginx/ssl/core.homelab.pem;
+    ssl_certificate_key /etc/nginx/ssl/core.homelab-key.pem;
 
     ssl_protocols TLSv1.3;
     ssl_prefer_server_ciphers on;
@@ -169,6 +224,10 @@ server {
 }
 EOF
 
-sudo ln -s /etc/nginx/sites-{available,enabled}/$SERVICE.conf
+sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE.conf
 
-sudo systemctl restart nginx
+sudo systemctl restart nginx-ctrl
+for FORWARDER_PATH in /lib/systemd/system/os-fwd-*
+do
+  sudo systemctl restart $(basename $FORWARDER_PATH)
+done
