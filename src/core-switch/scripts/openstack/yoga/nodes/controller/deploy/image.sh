@@ -26,8 +26,8 @@ cd ~/src/openstack
 [[ -d $SERVICE ]] || git clone https://opendev.org/openstack/$SERVICE.git -b stable/yoga
 
 [[ $REBUILD == "1" ]] && sudo rm -rf /var/lib/$SERVICE/src/$SERVICE
-sudo cp -R ~/src/openstack/$SERVICE /var/lib/$SERVICE/src
-sudo cp ~/install/patch/$SERVICE*.conf.patch /var/lib/$SERVICE/patch || true
+sudo cp -vR ~/src/openstack/$SERVICE /var/lib/$SERVICE/src
+sudo cp -v ~/install/patch/$SERVICE*.conf.patch /var/lib/$SERVICE/patch
 
 # this is actually flawed but we won't see a problem
 if rg -qF $SERVICE /etc/passwd
@@ -114,7 +114,7 @@ sudo chown www-data:www-data /var/log/nginx/$SERVICE
 sudo mkdir /var/www/$SERVICE
 
 # port forwarder
-HOST_IP_ADDRESS=$(rg core\\.homelab /etc/hosts | cut -d " " -f1)
+HOST_IP_ADDRESS=$(rg -F $(hostname -f) /etc/hosts | cut -d " " -f1)
 sudo tee /lib/systemd/system/os-fwd-${SERVICE}.service << EOF
 [Unit]
 Description=${SERVICE} API forwarder
