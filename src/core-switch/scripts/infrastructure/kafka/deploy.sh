@@ -40,7 +40,7 @@ SuccessExitStatus=143
 WantedBy=multi-user.target
 EOF
 
-sudo tee > /lib/systemd/system/kafka.service << EOF
+sudo tee /lib/systemd/system/kafka.service << EOF
 [Unit]
 Description=Apache Kafka Server
 Documentation=http://kafka.apache.org/documentation.html

@@ -8,7 +8,5 @@ apt-get -y install \
   python3-dev \
   libpq-dev \
   openssl \
-  uwsgi \
-  uwsgi-plugin-python3 \
   tox \
   python3-openstackclient

@@ -34,14 +34,14 @@ NODES=(os-net)
 cleanup_network ext
 NODES=(os-ctrl os-dash)
 cleanup_network api
-NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-store ak-kafka ak-zoo amqp pgsql mem)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-vol ak-kafka ak-zoo amqp pgsql mem)
 cleanup_network infr
-NODES=(os-net os-comp1 os-comp2 os-store)
+NODES=(os-net os-comp1 os-comp2 os-vol)
 cleanup_network data
-NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-store)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-vol)
 cleanup_network mgmt
 
-NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 ak-kafka ak-zoo amqp pgsql)
+NODES=(os-ctrl os-dash os-net os-comp1 os-comp2 os-vol ak-kafka ak-zoo amqp pgsql mem)
 for NODE in "${NODES[@]}"
 do
   ip netns del ${NODE} || true

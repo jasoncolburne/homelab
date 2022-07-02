@@ -7,7 +7,7 @@ else
   set -euo pipefail
 fi
 
-. ~/.openrc-admin
+source ~/.openrc-admin
 openstack project create --domain default --description "Distributed Quantum Computer" quantum
 KEYSTONE_HOST=$(hostname -f)
 KEYSTONE_PORT=5000
