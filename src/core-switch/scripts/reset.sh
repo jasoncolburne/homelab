@@ -15,4 +15,4 @@ SERVER_DIR=${SCRIPTS_DIR}/server
 
 ${OPENSTACK_DIR}/reset.sh
 ${INFRASTRUCTURE_DIR}/down.sh
-sudo ${NETWORK_DIR}/destroy.sh
+sudo DEBUG=${DEBUG} ${NETWORK_DIR}/destroy.sh
