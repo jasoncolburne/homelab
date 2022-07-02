@@ -76,31 +76,6 @@ KillMode=mixed
 WantedBy=multi-user.target
 EOF
 
-sudo tee /lib/systemd/system/os-api-forwarder.service << EOF
-[Unit]
-Description=Openstack API Forwarder
-After=network-online.target
-Requires=nginx-ctrl.service
-After=nginx-ctrl.service
-
-[Service]
-Type=simple
-
-ExecStart=/usr/bin/socat tcp4-listen:5000,fork,reuseaddr,bind=192.168.50.22 tcp4:os-ctrl-api:5000
-User=keystone
-Group=keystone
-SyslogIdentifier=os-api-forwarder
-SuccessExitStatus=143
-
-Restart=on-failure
-
-# Time to wait before forcefully stopped.
-TimeoutStopSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
 sudo mkdir -p /etc/nginx/ctrl/sites-{enabled,available}
 sudo cp -v /etc/nginx{,/ctrl}/nginx.conf
 sudo cp -v /etc/nginx{,/ctrl}/uwsgi_params

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-sudo systemctl stop os-api-forwarder nginx-ctrl uwsgi-${SERVICE} uwsgi-${SERVICE}-admin
+sudo systemctl stop os-fwd-${SERVICE} nginx-ctrl uwsgi-${SERVICE} || true
 
 sudo rm -rf \
   /etc/$SERVICE \

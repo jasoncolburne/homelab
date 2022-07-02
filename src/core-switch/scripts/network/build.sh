@@ -122,8 +122,9 @@ HOST_ID=30
 #
 # ext - 01
 # mgmt - 02
-# api - 04
+# infr - 04
 # data - 08
+# api [external network]
 
 NETWORK_NAME=mgmt
 NETWORK_IPV4_PREFIX=10.0.2.

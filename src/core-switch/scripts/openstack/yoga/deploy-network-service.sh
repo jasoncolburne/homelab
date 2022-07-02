@@ -160,8 +160,6 @@ server {
 
     ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
-    client_max_body_size 4G;
-
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE/socket;
         include       uwsgi_params;

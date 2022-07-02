@@ -21,8 +21,7 @@ sudo mkdir -p \
   /var/lib/$SERVICE/venv \
   /var/lib/$SERVICE/src \
   /var/lib/$SERVICE/patch \
-  /var/log/$SERVICE \
-  /run/uwsgi/$SERVICE
+  /var/log/$SERVICE
 
 mkdir -p ~/src/openstack
 
@@ -115,6 +114,33 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo mkdir /var/log/nginx/$SERVICE
 sudo chown www-data:www-data /var/log/nginx/$SERVICE
 sudo mkdir /var/www/$SERVICE
+
+# port forwarder
+HOST_IP_ADDRESS=$(rg core\\.homelab /etc/hosts | cut -d " " -f1)
+sudo tee /lib/systemd/system/os-fwd-${SERVICE}.service << EOF
+[Unit]
+Description=${SERVICE} API forwarder
+After=network-online.target
+Requires=nginx-ctrl.service
+After=nginx-ctrl.service
+
+[Service]
+Type=simple
+
+ExecStart=/usr/bin/socat tcp4-listen:${SERVICE_PORT},fork,reuseaddr,bind=${HOST_IP_ADDRESS} tcp4:os-ctrl-api:${SERVICE_PORT}
+User=${SERVICE}
+Group=${SERVICE}
+SyslogIdentifier=os-fwd-${SERVICE}
+SuccessExitStatus=143
+
+Restart=on-failure
+
+# Time to wait before forcefully stopped.
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # uwsgi
 sudo tee /lib/systemd/system/uwsgi-${SERVICE}-admin.service << EOF
@@ -312,7 +338,7 @@ sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE-internal.conf
 sudo ln -s /etc/nginx/ctrl/sites-{available,enabled}/$SERVICE-admin.conf
 
 sudo systemctl restart nginx-ctrl
-sudo systemctl restart os-api-forwarder
+sudo systemctl restart os-fwd-${SERVICE}
 
 source ~/.openrc-admin
 openstack project create --domain default --description "Service Project" service

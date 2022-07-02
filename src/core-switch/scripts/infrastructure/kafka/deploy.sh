@@ -31,6 +31,7 @@ After=network.target remote-fs.target
 [Service]
 Type=simple
 NetworkNamespacePath=/run/netns/ak-zoo
+ExecStartPre=rm -rf /tmp/zookeeper/*
 ExecStart=/usr/local/kafka/bin/zookeeper-server-start.sh /usr/local/kafka/config/zookeeper.properties
 ExecStop=/usr/local/kafka/bin/zookeeper-server-stop.sh
 Restart=on-abnormal
@@ -45,6 +46,7 @@ sudo tee /lib/systemd/system/kafka.service << EOF
 Description=Apache Kafka Server
 Documentation=http://kafka.apache.org/documentation.html
 Requires=zookeeper.service
+After=zookeeper.service
 
 [Service]
 Type=simple

@@ -161,8 +161,6 @@ server {
 
     ssl_dhparam /etc/ssl/certs/dhparam.pem;
 
-    client_max_body_size 4G;
-
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE/socket;
         include       uwsgi_params;
@@ -172,24 +170,5 @@ server {
 EOF
 
 sudo ln -s /etc/nginx/sites-{available,enabled}/$SERVICE.conf
-sudo sed -i "s/worker_processes auto/worker_processes 6/" /etc/nginx/nginx.conf
-
-[[ ! -f /etc/ssl/certs/dhparam.pem ]] && sudo openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
-if [[ ! -f /usr/local/bin/mkcert ]]
-then
-  sudo apt-get -y install libnss3-tools
-  curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-  chmod +x mkcert-v*-linux-amd64
-  sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
-  sudo mkcert --install
-fi
-
-if [[ ! -d /etc/nginx/ssl ]]
-then
-  sudo mkdir -p /etc/nginx/ssl
-  sudo mkcert -ecdsa $HOST
-  sudo mv $HOST.pem /etc/nginx/ssl/cert.pem
-  sudo mv $HOST-key.pem /etc/nginx/ssl/key.pem
-fi
 
 sudo systemctl restart nginx

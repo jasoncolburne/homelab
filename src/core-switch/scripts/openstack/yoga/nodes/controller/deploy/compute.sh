@@ -7,6 +7,10 @@ else
   set -euo pipefail
 fi
 
+NODE_API_IP_ADDRESS=$(rg os-ctrl-api /etc/hosts | cut -d " " -f1)
+NODE_MGMT_IP_ADDRESS=$(rg os-ctrl-mgmt /etc/hosts | cut -d " " -f1)
+NODE_INFR_IP_ADDRESS=$(rg os-ctrl-infr /etc/hosts | cut -d " " -f1)
+
 CONTROLLER_DIR=~/install/scripts/openstack/yoga/nodes/controller
 DEPENDENCY_DIR=${CONTROLLER_DIR}/dependencies
 sudo ${DEPENDENCY_DIR}/common.sh
@@ -17,8 +21,7 @@ sudo mkdir -p \
   /var/lib/$SERVICE/venv \
   /var/lib/$SERVICE/src \
   /var/lib/$SERVICE/patch \
-  /var/log/$SERVICE \
-  /run/uwsgi/$SERVICE
+  /var/log/$SERVICE
 
 mkdir -p ~/src/openstack
 
@@ -42,6 +45,7 @@ else
     $SERVICE
 fi
 
+POSTGRES_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
 echo "SELECT 'CREATE DATABASE $SERVICE' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$SERVICE')\gexec" | sudo -u postgres psql -q
 sudo -u postgres psql -q << PLPGSQL
 DO
@@ -51,12 +55,21 @@ BEGIN
     SELECT FROM pg_catalog.pg_roles
     WHERE  rolname = '$SERVICE') THEN
 
-    CREATE ROLE $SERVICE LOGIN;
+    CREATE ROLE $SERVICE LOGIN PASSWORD '${POSTGRES_PASSPHRASE}';
   END IF;
 END
 \$do\$;
 PLPGSQL
 sudo -u postgres psql -q -c "GRANT ALL PRIVILEGES ON DATABASE $SERVICE TO $SERVICE;"
+
+if sudo rg "hostssl.+${SERVICE}" /etc/postgresql/13/main/ph_hba.conf
+then
+  sudo sed -i "s/^hostssl.+${SERVICE}.+$/hostssl ${SERVICE} ${SERVICE} ${NODE_INFR_IP_ADDRESS}\/32 scram-sha-256/" /etc/postgresql/13/main/pg_hba.conf
+else
+  echo "hostssl ${SERVICE} ${SERVICE} ${NODE_INFR_IP_ADDRESS}/32 scram-sha-256" | sudo tee -a /etc/postgresql/13/main/pg_hba.conf
+fi
+
+sudo systemctl restart postgresql
 
 sudo chown -R $SERVICE:$SERVICE /etc/$SERVICE
 sudo chown -R $SERVICE:$SERVICE /var/lib/$SERVICE
@@ -158,8 +171,6 @@ server {
     add_header X-Content-Type-Options nosniff;
 
     ssl_dhparam /etc/ssl/certs/dhparam.pem;
-
-    client_max_body_size 4G;
 
     location / {
         uwsgi_pass    unix:///run/uwsgi/app/$SERVICE/socket;

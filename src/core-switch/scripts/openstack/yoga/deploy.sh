@@ -17,7 +17,7 @@ export METADATA_HOST=$(hostname -f)
 
 DEPLOY_DIR=~/install/scripts/openstack/yoga/nodes/controller/deploy
 SERVICE=keystone SERVICE_PORT=$KEYSTONE_PORT SERVICE_ADMIN_PORT=35357 ${DEPLOY_DIR}/identity.sh
-# SERVICE=glance SERVICE_TYPE=image SERVICE_PORT=9292 WSGI_SCRIPT=glance-wsgi-api DESCRIPTION="OpenStack Image API (glance)" ${DEPLOY_DIR}/image.sh
+SERVICE=glance SERVICE_TYPE=image SERVICE_PORT=9292 WSGI_SCRIPT=glance-wsgi-api DESCRIPTION="OpenStack Image API (glance)" ${DEPLOY_DIR}/image.sh
 # export PLACEMENT_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
 # SERVICE=placement SERVICE_TYPE=placement SERVICE_PORT=8778 WSGI_SCRIPT=placement-api DESCRIPTION="OpenStack Placement API (placement)" ${DEPLOY_DIR}/placement.sh
 # export NOVA_PASSPHRASE=$(dd if=/dev/urandom bs=32 count=1 | base64 | tr / -)
