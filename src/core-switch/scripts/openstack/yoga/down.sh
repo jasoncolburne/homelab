@@ -21,4 +21,4 @@ do
   sudo systemctl stop ${SERVICE}
 done
 
-sudo systemctl stop nova-scheduler nova-conductor
+sudo systemctl stop nova-scheduler nova-conductor nova-novncproxy

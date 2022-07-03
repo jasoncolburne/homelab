@@ -287,5 +287,22 @@ WorkingDirectory=/var/lib/nova
 WantedBy=multi-user.target
 EOF
 
+sudo tee /lib/systemd/system/nova-novncproxy.service << EOF
+[Unit]
+Description=Openstack Compute Controller No VNC Proxy
+After=network.target
+
+[Service]
+Environment=REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+NetworkNamespacePath=/run/netns/os-ctrl
+ExecStart=/var/lib/nova/venv/bin/nova-novncproxy
+User=nova
+Group=nova
+WorkingDirectory=/var/lib/nova
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 sudo systemctl daemon-reload
-sudo systemctl restart nova-scheduler nova-conductor
+sudo systemctl restart nova-scheduler nova-conductor nova-novncproxy

@@ -2,4 +2,6 @@
 
 set -euo pipefail
 
-apt-get -y install libvirt-dev
+apt-get -y install \
+  libvirt-dev \
+  novnc

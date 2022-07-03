@@ -20,6 +20,7 @@ sudo systemctl status \
   uwsgi-nova \
   nova-scheduler \
   nova-conductor \
+  nova-novncproxy \
   memcached \
   rabbitmq-server \
   zookeeper \

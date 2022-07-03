@@ -7,7 +7,7 @@ else
   set -euo pipefail
 fi
 
-sudo systemctl restart nova-scheduler nova-conductor
+sudo systemctl restart nova-scheduler nova-conductor nova-novncproxy
 for SERVICE_PATH in /lib/systemd/system/uwsgi-*
 do
   SERVICE=$(basename ${SERVICE_PATH})

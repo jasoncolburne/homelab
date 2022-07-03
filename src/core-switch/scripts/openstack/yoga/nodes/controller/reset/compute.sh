@@ -4,7 +4,8 @@ set -euo pipefail
 
 sudo systemctl stop nova-scheduler || true
 sudo systemctl stop nova-conductor || true
-sudo rm -f /lib/systemd/system/nova-scheduler.service /lib/systemd/system/nova-conductor.service
+sudo systemctl stop nova-novncproxy || true
+sudo rm -f /lib/systemd/system/nova-{scheduler,conductor,novncproxy}.service
 sudo systemctl daemon-reload
 
 sudo systemctl stop os-fwd-${SERVICE} nginx-ctrl uwsgi-${SERVICE} || true
