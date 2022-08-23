@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-sudo apt-get -y install build-essential fakeroot
+sudo apt-get -y install --no-install-recommends build-essential fakeroot
 sudo apt-get -y build-dep linux
 
 mkdir -p ~/kernel

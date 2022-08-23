@@ -22,7 +22,7 @@ read -s KBUILD_SIGN_PIN
 export KBUILD_SIGN_PIN
 
 for MODULE in $(find ${MODULES_DIR} -type f -name '*.ko*'); do
-    (modinfo "${MODULE}" | rg "signer:\s+core") || \
+    (sudo modinfo "${MODULE}" | rg "signer:\s+core") || \
     (echo "signing ${MODULE}"; sudo --preserve-env=KBUILD_SIGN_PIN ${MODULES_DIR}/build/scripts/sign-file sha256 /var/lib/shim-signed/mok/MOK.priv /var/lib/shim-signed/mok/MOK.der "${MODULE}")
 done
 

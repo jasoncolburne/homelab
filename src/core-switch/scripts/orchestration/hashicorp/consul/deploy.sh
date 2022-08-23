@@ -7,6 +7,20 @@ else
   set -euo pipefail
 fi
 
+cd ~
+if [[ ! -d /usr/local/go ]] || [[ "${FETCH_GO:-0}" == "1" ]]
+then
+  rm -f go1.19.linux-amd64.tar.gz
+  wget https://go.dev/dl/go1.19.linux-amd64.tar.gz
+  sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.19.linux-amd64.tar.gz
+fi
+
+if (! rg local/go/bin ~/.zshrc)
+then 
+  echo "export PATH='\$PATH:/usr/local/go/bin:/home/${USER}/go/bin:/home/${USER}/src/nomad-pack/bin'" >> ~/.zshrc
+  . ~/.zshrc
+fi
+
 sudo apt-get -y install consul
 
 sudo tee /etc/sysctl.d/20-bridge-iptables.conf << EOF
@@ -88,7 +102,7 @@ advertise_addr = "127.0.0.1"
 # bootstraps the cluster. This allows an initial leader to be elected automatically.
 # This cannot be used in conjunction with the legacy -bootstrap flag. This flag requires
 # -server mode.
-#bootstrap_expect = 3
+bootstrap_expect = 1
 
 # encrypt
 # Specifies the secret key to use for encryption of Consul network traffic. This key must
@@ -120,14 +134,6 @@ encrypt = "ENCRYPTION_KEY"
 #retry_join = ["provider=aws tag_key=... tag_value=..."]
 #retry_join = ["provider=azure tag_name=... tag_value=... tenant_id=... client_id=... subscription_id=... secret_access_key=..."]
 #retry_join = ["provider=gce project_name=... tag_value=..."]
-
-ports {
-  grpc = 8502
-}
-
-connect {
-  enabled = true
-}
 EOF
 
 sudo tee /etc/consul.d/consul-acl.hcl << EOF

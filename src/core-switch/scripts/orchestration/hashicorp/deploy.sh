@@ -25,21 +25,33 @@ sudo sed -i "s/ENCRYPTION_KEY/$(consul keygen | sed 's/\//\\\//g')/" /etc/consul
 sudo systemctl restart consul
 sleep 5
 
-sudo sed -i 's/^encrypt/#encrypt/' /etc/consul.d/consul.hcl
+sudo sed -i 's/^encrypt.*/#encrypt = ""/' /etc/consul.d/consul.hcl
+sudo sed -i 's/^bootstrap_expect/#bootstrap_expect/' /etc/consul.d/consul.hcl
 
-if [[ ! -f ~/consul.bootstrap.json ]]; then
+if [[ ! -f ~/.consul.bootstrap.json ]]; then
   echo 'writing consul bootstrap to ~/.consul.bootstrap.json'
-  consul acl bootstrap -format=json > ~/consul.bootstrap.json
+  consul acl bootstrap -format=json > ~/.consul.bootstrap.json
 fi
 
-export CONSUL_HTTP_TOKEN=$(cat ~/consul.bootstrap.json | jq -r '.SecretID')
+export CONSUL_HTTP_TOKEN=$(cat ~/.consul.bootstrap.json | jq -r '.SecretID')
 
 POLICY_DIR=~/install/scripts/orchestration/hashicorp/consul/policy
 
 consul acl policy create -name=agent -rules=@${POLICY_DIR}/agent.hcl
 AGENT_CONSUL_TOKEN=$(consul acl token create -policy-name=agent -description="consul agent" -format=json | jq -r '.SecretID')
-sudo sed -i "s/AGENT_TOKEN/${AGENT_CONSUL_TOKEN}/" /etc/consul.d/consul.hcl
+sudo sed -i "s/AGENT_TOKEN/${AGENT_CONSUL_TOKEN}/" /etc/consul.d/consul-acl.hcl
 unset AGENT_CONSUL_TOKEN
+
+sudo tee -a /etc/consul.d/consul.hcl << EOF
+
+ports {
+  grpc = 8502
+}
+
+connect {
+  enabled = true
+}
+EOF
 
 sudo systemctl restart consul
 sleep 5
@@ -66,16 +78,18 @@ if [[ ! -f ~/.vault.init.json ]]; then
   vault operator init -key-shares=1 -key-threshold=1 -format=json > ~/.vault.init.json
 fi
 
-cat ~/.vault.init.json | jq '.root_token' > ~/.vault-token
+cat ~/.vault.init.json | jq -r '.root_token' > ~/.vault-token
 
 sleep 2
 
-if [[ ! vault status ]]; then
-  echo "please enter '$(cat ~/.vault.init.json | jq -r '.keys_base64[0]')' at the next prompt."
-  vault operator unseal
-fi
+OPERATOR_PASSPHRASE=$(cat ~/.vault.init.json | jq -r '.unseal_keys_b64[0]')
+echo "please enter ${OPERATOR_PASSPHRASE} at the next prompt."
+unset OPERATOR_PASSPHRASE
+vault operator unseal
 
 sleep 2
+
+vault secrets enable -version=2 kv
 
 POLICY_DIR=~/install/scripts/orchestration/hashicorp/vault/policy
 vault policy write kv ${POLICY_DIR}/kv-allowed.hcl
@@ -85,3 +99,9 @@ vault write /auth/token/roles/nomad-cluster @${POLICY_DIR}/nomad-cluster-role.js
 NOMAD_VAULT_TOKEN=$(vault token create -policy nomad-server -period 72h -orphan -format=json | jq -r '.auth.client_token')
 sudo sed -i "s/VAULT_TOKEN/${NOMAD_VAULT_TOKEN}/" /etc/nomad.d/nomad.hcl
 unset NOMAD_VAULT_TOKEN
+
+sudo systemctl start nomad
+
+sleep 3
+
+sudo sed -i 's/bootstrap_expect/#bootstrap_expect/' /etc/nomad.d/nomad.hcl
