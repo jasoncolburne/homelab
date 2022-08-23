@@ -282,6 +282,9 @@ I am now trying the setting `pcie_aspm=off` in addition to the other kernel flag
 Edit: Since making the above change to the `pcie_aspm` flag, I have had an uptime of over
 10 days. I'll make another edit if things break down again, but it looks like this resolved the issue.
 
+Edit: This did not resolve the issue, which actually ended up being a BTRFS Copy-on-Write problem.
+Many of my use cases cause this undesired behaviour, so I'm reinstalling the whole system with ext4.
+
 ### Networking Setup
 
 I made some changes to the basic networking config in `/etc/default/networking`:

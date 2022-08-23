@@ -8,21 +8,17 @@ sudo apt-get -y build-dep linux
 mkdir -p ~/kernel
 cd ~/kernel
 
-rm -rf linux-${LINUX_VERSION}
+rm -rf linux-* linux_*
 apt source linux
-cd linux-${LINUX_VERSION}
+cd linux-*
 
 cat > debian/config/amd64/config.sme << EOF
 CONFIG_AMD_MEM_ENCRYPT=y
 CONFIG_MODULE_ALLOW_MISSING_NAMESPACE_IMPORTS=n
 CONFIG_MODULE_COMPRESS_ZSTD=y
 CONFIG_MODULE_SIG=y
-CONFIG_MODULE_SIG_ALL=y
+CONFIG_MODULE_SIG_ALL=n
 CONFIG_MODULE_SIG_FORCE=n
-CONFIG_MODULE_SIG_HASH="sha256"
-CONFIG_MODULE_SIG_KEY="/var/lib/shim-signed/mok/MOK.bundle.pem"
-CONFIG_MODULE_SIG_KEY_TYPE_RSA=y
-CONFIG_MODULE_SIG_SHA256=y
 CONFIG_SYSTEM_TRUSTED_KEYS="/var/lib/shim-signed/mok/MOK.pem"
 EOF
 
@@ -51,8 +47,13 @@ configs:
  amd64/config.sme
 
 [sme-amd64_build]
-signed-code: true
+signed-code: false
 EOF
 
 debian/bin/gencontrol.py
 fakeroot make -f debian/rules.gen binary-arch_amd64_none_sme-amd64 -j$(nproc)
+
+cd ~
+rm kernel/*dbg*.deb
+
+tar czvf kernel.tgz kernel/linux-image-*-sme-amd64_*_amd64.deb kernel/linux-headers-*-sme-amd64_*_amd64.deb

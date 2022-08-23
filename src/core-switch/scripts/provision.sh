@@ -12,9 +12,7 @@ sudo apt-get -y install \
   bridge-utils \
   clevis-tpm2 \
   clevis-luks \
-  clevis-dracut \
-  sbsigntool \
-  socat
+  clevis-dracut
 
 # sudo apt-get -y --no-install-recommends install firejail/bullseye-backports
 
@@ -38,41 +36,16 @@ echo "deploying system configuration"
 sudo tar xzvf ~/install/configuration.tgz
 echo "deploying sev firmware"
 sudo tar xzvf ~/install/firmware.tgz
+echo "deploying existing MOK"
+sudo tar xzvf ~/install/mok.tgz
 
 echo "bringing up networking"
 sudo systemctl start networking
 
 echo "installing sme kernel"
 cd ~
-tar xzvf ~/install/linux-5.10.0-15-sme-amd64.tgz
-cd linux-5.10.0-15-sme-amd64
-sudo apt-get -y install ./linux-image-5.10.0-15-sme-amd64-unsigned_5.10.120-1_amd64.deb
-sudo apt-get -y install ./linux-headers-5.10.0-15-sme-amd64_5.10.120-1_amd64.deb
-cd ~
-rm -rf linux-5.10.0-15-sme-amd64
-
-echo "configuring default kernel"
-sudo grub-set-default 'Advanced options for Debian GNU/Linux>Debian GNU/Linux, with Linux 5.10.0-15-sme-amd64'
-sudo update-grub
-
-echo "signing sme kernel. please input MOK passphrase when prompted."
-VERSION=5.10.0-15-sme-amd64
-cd /
-sudo tar xzvf ~/install/mok.tgz
-cd /var/lib/shim-signed/mok
-sudo sbsign --key MOK.priv --cert MOK.pem "/boot/vmlinuz-$VERSION" --output "/boot/vmlinuz-$VERSION.tmp"
-cd ~
-sudo mv "/boot/vmlinuz-$VERSION.tmp" "/boot/vmlinuz-$VERSION"
-sudo dracut -f
-
-echo "disabling apt-daily services"
-# I don't really want to do this but logged in one day and found load
-# at 173, due to 173 systemd-journal processes spawned by a whole bunch
-# of apt-daily jobs. I didn't bother to figure out why, but I should.
-sudo systemctl disable apt-daily
-sudo systemctl disable apt-daily-upgrade
-sudo systemctl disable apt-daily.timer
-sudo systemctl disable apt-daily-upgrade.timer
+cp ~/install/kernel.tgz .
+~/install/scripts/install-sme-kernel.sh
 
 echo "cleaning up"
 sudo apt-get -y autoremove

@@ -19,6 +19,7 @@ sudo tar czvf ~/install.bundle/configuration.tgz \
   etc/network/interfaces \
   etc/ssh/sshd_config.d/10-no-passwords.conf \
   etc/sysctl.d/10-disable-ipv6.conf \
+  opt/nomad/docker.json
 
 sudo tar czvf ~/install.bundle/mok.tgz \
   var/lib/shim-signed/mok
@@ -31,7 +32,8 @@ tar czvf ~/install.bundle/$USER.tgz \
   .zshenv \
   .p10k.zsh \
 
-cp -v ~/install{,.bundle}/linux-5.10.0-15-sme-amd64.tgz
+cp -v ~{,/install.bundle}/secrets.tgz
+cp -v ~{,/install.bundle}/kernel.tgz
 cp -v ~/install{,.bundle}/ldap.tgz
 cp -vR ~/install{,.bundle}/patch
 cp -vR ~/install{,.bundle}/scripts
