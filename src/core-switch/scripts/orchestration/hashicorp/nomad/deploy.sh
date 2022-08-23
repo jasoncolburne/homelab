@@ -9,6 +9,8 @@ fi
 
 sudo apt-get -y install nomad
 
+sudo usermod -G docker -a nomad
+
 sudo tee /etc/nomad.d/nomad.hcl << EOF
 # Full configuration options can be found at https://www.nomadproject.io/docs/configuration
 
