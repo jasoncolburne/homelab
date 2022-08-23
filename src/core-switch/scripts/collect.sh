@@ -27,7 +27,7 @@ sudo tar czvf ~/install.bundle/mok.tgz \
 cd ~
 
 tar czvf ~/install.bundle/$USER.tgz \
-  .docker \
+  .docker/config.json \
   .ssh \
   .zshrc \
   .zshenv \
