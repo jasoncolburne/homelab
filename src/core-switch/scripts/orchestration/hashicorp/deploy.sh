@@ -20,8 +20,12 @@ sudo apt-get update
 
 sudo apt-get install -y jq
 
+sudo sed -i "s/ENCRYPTION_KEY/$(consul keygen | sed 's/\//\\\//g')/" /etc/consul.d/consul.hcl
+
 sudo systemctl restart consul
 sleep 5
+
+sudo sed -i 's/^encrypt/#encrypt/' /etc/consul.d/consul.hcl
 
 if [[ ! -f ~/consul.bootstrap.json ]]; then
   echo 'writing consul bootstrap to ~/.consul.bootstrap.json'
