@@ -23,7 +23,7 @@ sudo apt-get install -y jq
 sudo sed -i "s/ENCRYPTION_KEY/$(consul keygen | sed 's/\//\\\//g')/" /etc/consul.d/consul.hcl
 
 sudo systemctl restart consul
-sleep 5
+sleep 10
 
 sudo sed -i 's/^encrypt.*/#encrypt = ""/' /etc/consul.d/consul.hcl
 sudo sed -i 's/^bootstrap_expect/#bootstrap_expect/' /etc/consul.d/consul.hcl
@@ -105,3 +105,6 @@ sudo systemctl start nomad
 sleep 3
 
 sudo sed -i 's/bootstrap_expect/#bootstrap_expect/' /etc/nomad.d/nomad.hcl
+
+cd /
+sudo tar xzvf ~/install/configuration.tgz opt/nomad/docker.json

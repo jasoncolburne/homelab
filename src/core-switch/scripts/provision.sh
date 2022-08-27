@@ -47,6 +47,9 @@ cd ~
 cp ~/install/kernel.tgz .
 ~/install/scripts/install-sme-kernel.sh
 
+echo "moving secrets"
+cp ~/install/secrets.tgz .
+
 echo "cleaning up"
 sudo apt-get -y autoremove
 
