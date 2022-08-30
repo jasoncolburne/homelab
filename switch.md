@@ -282,8 +282,17 @@ I am now trying the setting `pcie_aspm=off` in addition to the other kernel flag
 Edit: Since making the above change to the `pcie_aspm` flag, I have had an uptime of over
 10 days. I'll make another edit if things break down again, but it looks like this resolved the issue.
 
-Edit: This did not resolve the issue, which actually ended up being a BTRFS Copy-on-Write problem.
-Many of my use cases cause this undesired behaviour, so I'm reinstalling the whole system with ext4.
+Edit: This did not resolve the issue, which actually ended up being a BTRFS Copy-on-Write interaction
+with the Linux kernel. Many of my use cases cause this undesired behaviour, so I'm reinstalling the
+whole system with ext4.
+
+Edit: The problem persisted with ext4, and I'm now wondering whether the issue is simply that after
+a reset of the device and failed bridge, dmcrypt required a password to remount the device. I
+believe this is complicated by the fact that I was using software encryption, with RAID layered on
+top. I ordered two crucial drives to see if the controller resets disappear. They are self-encrypting,
+so I should be able to omit one of the software layers. I'll update this after a week of uptime or
+a failure. I also had not enabled `clevis-luks-askpass.path` so it's possible that now that I have,
+the system can recover without intervention.
 
 ### Networking Setup
 

@@ -47,8 +47,11 @@ cd ~
 cp ~/install/kernel.tgz .
 ~/install/scripts/install-sme-kernel.sh
 
-echo "moving secrets"
+echo "copying secrets"
 cp ~/install/secrets.tgz .
+
+echo "enabling clevis on demand"
+sudo systemctl enable clevis-luks-askpass.path
 
 echo "cleaning up"
 sudo apt-get -y autoremove
