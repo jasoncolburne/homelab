@@ -43,7 +43,7 @@ Don't forget to grab an anti-static wrist strap for this build, they are cheaply
 - [AsRock Rack EPYCD8-2T](http://asrockrack.com/general/productdetail.asp?Model=EPYCD8-2T#Specifications)
 - [AsRock Rack TPM2-S Nuvoton NPCT650](https://www.asrockrack.com/general/productdetail.asp?Model=TPM2-S#Specifications)
 - ~4x32gb~ 8x32gb Crucial 2666Mhz ECC RDIMM CL19 (~`CT32G4RFD4266`~ <- I originally ordered four of this part number, and received `CT32G4RFD4266.36FB1`, but it turns out the [QVL](https://www.asrockrack.com/general/productdetail.asp?Model=EPYCD8-2T#Memory) for the EPYCD8-2T is even more specific and requires `CT32G4RFD4266.2G6H1.001`. I was sent `CT32G4RFD4266.36FD1` after ordering the QVL part, and this RAM worked.)
-- 2x[Western Digital SN570 500GB M.2](https://www.westerndigital.com/en-ca/products/internal-drives/wd-blue-sn570-nvme-ssd#WDS500G3B0C)
+- ~2x[Western Digital SN570 500GB M.2](https://www.westerndigital.com/en-ca/products/internal-drives/wd-blue-sn570-nvme-ssd#WDS500G3B0C)~ 2x[Crucial P5 Plus 1TB M.2](https://www.crucial.com/ssd/p5-plus/ct1000p5pssd8)
 - [Kingston A400 120GB 2.5"](https://www.kingston.com/en/ssd/a400-solid-state-drive)
 - 3.5" to 2.5" drive tray
 - [Dynatron A26](https://www.dynatron.co/product-page/a26)
@@ -293,6 +293,79 @@ top. I ordered two crucial drives to see if the controller resets disappear. The
 so I should be able to omit one of the software layers. I'll update this after a week of uptime or
 a failure. I also had not enabled `clevis-luks-askpass.path` so it's possible that now that I have,
 the system can recover without intervention.
+
+Edit: Well this was quite a chore. Read the next, new, section for details. Right now the system
+has been up for about 12 hours, and it typically fails under small loads (like it is) with many
+IO operations on the RAID array in a couple days. I'll post again after a failure or a substantial
+uptime.
+
+```
+❯ uptime
+ 12:14:14 up 11:34,  1 user,  load average: 2.14, 1.97, 1.98
+```
+
+### SED Passwordless Boot via `dracut`, `clevis` and `sedutil-cli`
+
+It turns out that using a TPM to unlock both SEDs and LUKS drives in an automated way with secure
+boot active is fairly tricky. To see how I accomplished this, read on.
+
+I hammered my way through this in about 12 hours. The reason it took so long is that several times,
+to get out of an unbootable situation, I needed to:
+
+1. Turn off secure boot
+1. Reinstall a basic OS on the LUKS drive
+1. Use the basic OS to mess with the SED using `sedutil-cli`
+1. Adjust scripts
+1. Build a new UEFI image.
+1. Turn on secure boot.
+1. Power down.
+1. Boot and most likely, repeat.
+
+I had this process down to about 10 minutes in the end. The reboots were the time killer. 2 minutes
+every time.
+
+Here is how the solution works:
+
+- I used `dracut` modules to [install](./src/core-switch/scripts/security/sedutil/setup.sh) custom 
+logic at boot.
+- The [module](./src/core-switch/scripts/security/sedutil/module-setup.sh) I created includes
+`sedutil-cli`, `argon2`, `clevis-tpm2` and associated libraries. It also includes tpm2-encrypted
+HDD passphrases for SEDs.
+- The [script](./src/core-switch/scripts/security/sedutil/unlock-sed.sh) that is invoked at boot
+follows this logic:
+  - Check lock status.
+    - Locked
+      - Attempt to decrypt encrypted password
+        - Success
+          - Unlock SED
+          - Done
+        - Failure
+          - Use `systemd-ask-password` to prompt the user for the user passphrase
+          - Derive the HDD passphrase using `argon2`
+          - Unlock SED
+          - Done
+    - Unlocked
+      - Done
+
+[This](./src/core-switch/scripts/store-hdd-passphrases.sh) is the script I use to regenerate LUKS
+and SED encrypted keys, any time the PCR values in the TPM change (when you upgrade the kernel or
+change a BIOS setting, for example).
+
+It works! I had to adjust the TPM registers I was measuring to get it to consistently boot, I
+believe because I'm changing the UEFI image itself. I am considering putting the encrypted keys
+on the boot partition and mounting it during this process to see if I can include another PCR value.
+I changed from PCRs 0,1,2,3,4,5,6,7 to 0,2,3,4,6,7,8. I am having trouble finding a definitive
+answer on what these values represent, but through trial and error found a consistent set to
+measure.
+
+About this solution: We use a null salt for the `argon2` extension, since we want to be able to
+recover from passphrase alone. The argon2 params run in about 10 seconds on my system, which is a
+bit much, but I am okay with it since passwordless boot just needs to TPM-decrypt the passphrase
+and unlock, there is no derivation necessary. To make the dracut module a bit nicer, one could add
+real checks in the `check` method of `module-setup.sh`. In reality though, this module not firing in
+my system would render it unbootable, so check merely provides feedback that everything expected is
+present when building the image, but it doesn't guarantee you didn't forget to add something you
+needed. Anyway, `check()` should be populated.
 
 ### Networking Setup
 
