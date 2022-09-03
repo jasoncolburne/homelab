@@ -34,6 +34,11 @@ sudo systemctl stop networking
 cd /
 echo "deploying system configuration"
 sudo tar xzvf ~/install/configuration.tgz
+
+echo "enabling journal monitor"
+sudo systemctl daemon-reload
+sudo systemctl enable monitor-systemd-journal.service
+
 echo "deploying sev firmware"
 sudo tar xzvf ~/install/firmware.tgz
 echo "deploying existing MOK"
@@ -52,6 +57,9 @@ cp ~/install/secrets.tgz .
 
 echo "enabling clevis on demand"
 sudo systemctl enable clevis-luks-askpass.path
+
+echo "creating src dir"
+mkdir -p ~/src
 
 echo "cleaning up"
 sudo apt-get -y autoremove

@@ -19,7 +19,8 @@ sudo tar czvf ~/install.bundle/configuration.tgz \
   etc/network/interfaces \
   etc/ssh/sshd_config.d/10-no-passwords.conf \
   etc/sysctl.d/10-disable-ipv6.conf \
-  opt/nomad/docker.json
+  opt/nomad/docker.json \
+  lib/systemd/system/monitor-systemd-journal.service
 
 sudo tar czvf ~/install.bundle/mok.tgz \
   var/lib/shim-signed/mok
@@ -32,6 +33,7 @@ tar czvf ~/install.bundle/$USER.tgz \
   .zshrc \
   .zshenv \
   .p10k.zsh \
+  bin
 
 cp -v ~{,/install.bundle}/secrets.tgz
 cp -v ~{,/install.bundle}/kernel.tgz

@@ -7,6 +7,9 @@ else
   set -euo pipefail
 fi
 
+sudo apt-get update
+sudo apt-get install -y build-essential
+
 cd ~
 if [[ ! -d /usr/local/go ]] || [[ "${FETCH_GO:-0}" == "1" ]]
 then
