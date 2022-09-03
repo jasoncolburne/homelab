@@ -310,7 +310,7 @@ It turns out that using a TPM to unlock both SEDs and LUKS drives in an automate
 boot active is fairly tricky. To see how I accomplished this, read on.
 
 I hammered my way through this in about 12 hours. The reason it took so long is that several times,
-to get out of an unbootable situation, I needed to (this morphed as I made progress with the
+to get out of an unbootable situation, I needed to (this morphed as I made progress with
 `unlock-sed.sh`):
 
 1. Turn off secure boot
