@@ -326,7 +326,7 @@ every time.
 
 Here is how the solution works:
 
-- I used `dracut` modules to [install](./src/core-switch/scripts/security/sedutil/setup.sh) custom 
+- I used `dracut` modules to [install](./src/core-switch/scripts/security/sedutil/setup.sh) custom
 logic at boot.
 - The [module](./src/core-switch/scripts/security/sedutil/module-setup.sh) I created includes
 `sedutil-cli`, `argon2`, `clevis-tpm2` and associated libraries. It also includes tpm2-encrypted
@@ -362,10 +362,10 @@ About this solution: We use a null salt for the `argon2` extension, since we wan
 recover from passphrase alone. The argon2 params run in about 10 seconds on my system, which is a
 bit much, but I am okay with it since passwordless boot just needs to TPM-decrypt the passphrase
 and unlock, there is no derivation necessary. To make the dracut module a bit nicer, one could add
-real checks in the `check` method of `module-setup.sh`. In reality though, this module not firing in
-my system would render it unbootable, so check merely provides feedback that everything expected is
-present when building the image, but it doesn't guarantee you didn't forget to add something you
-needed. Anyway, `check()` should be populated.
+real checks in the `check` method of `module-setup.sh`. In reality, this module not firing in
+my system would render it unbootable - so check merely provides feedback that everything expected is
+present when building the image - it doesn't guarantee you didn't forget to add something you
+needed. As such, it was kind of useless during development. Anyway, `check()` should be populated.
 
 ### Networking Setup
 
