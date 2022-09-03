@@ -310,20 +310,24 @@ It turns out that using a TPM to unlock both SEDs and LUKS drives in an automate
 boot active is fairly tricky. To see how I accomplished this, read on.
 
 I hammered my way through this in about 12 hours. The reason it took so long is that several times,
-to get out of an unbootable situation, I needed to:
+to get out of an unbootable situation, I needed to (this morphed as I made progress with the
+`unlock-sed.sh`):
 
 1. Turn off secure boot
-1. Reinstall a basic OS on the LUKS drive
-1. Use the basic OS to mess with the SED using `sedutil-cli`
+1. Install a basic OS on the LUKS drive
+1. Use the basic OS to mess with the SED using `sedutil-cli`, unlocking the drives until power off
+1. Install the full OS over the all drives
 1. Adjust scripts
-1. Build a new UEFI image.
-1. Turn on secure boot.
-1. Power down.
-1. Boot and most likely, repeat.
+1. Build a new UEFI image
+1. Turn on secure boot
+1. Power down
+1. Boot and most likely, repeat
 
 I had this process down to about 10 minutes in the end. The reboots were the time killer. 2 minutes
 every time. Once I had a fairly stable basic OS, I was able to use a LiveCD recovery console to
-mount the existing LUKS partitions to gain access to the tools I needed to fix my issues.
+mount the existing LUKS partitions to gain access to the tools I needed to fix my issues. Once I had
+the majority of the script working, I was able to repeatedly boot into the system via password and
+fix up the remaining bit (automated entry).
 
 Here is how the solution works:
 
