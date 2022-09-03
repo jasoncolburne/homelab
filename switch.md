@@ -323,7 +323,7 @@ to get out of an unbootable situation, I needed to:
 
 I had this process down to about 10 minutes in the end. The reboots were the time killer. 2 minutes
 every time. Once I had a fairly stable basic OS, I was able to use a LiveCD recovery console to
-mount the existing LUKS parititons to gain access to the tools I needed to fix my issues.
+mount the existing LUKS partitions to gain access to the tools I needed to fix my issues.
 
 Here is how the solution works:
 
