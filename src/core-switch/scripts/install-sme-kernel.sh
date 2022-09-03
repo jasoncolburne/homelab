@@ -35,15 +35,5 @@ cd ~
 sudo mv "/boot/vmlinuz-${VERSION}.tmp" "/boot/vmlinuz-${VERSION}"
 sudo dracut -f --regenerate-all -v
 
-echo "now you'll need to reboot and configure/update clevis/luks, after typing your passwords"
-echo "for example,"
-echo "  sudo clevis luks bind -d /dev/sda3 tpm2 '{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"0,1,2,3,4,5,6,7\"}'"
-echo "  sudo clevis luks bind -d /dev/sda4 tpm2 '{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"0,1,2,3,4,5,6,7\"}'"
-echo "  sudo clevis luks bind -d /dev/md0 tpm2 '{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"0,1,2,3,4,5,6,7\"}'"
-echo "or"
-echo "  sudo clevis luks unbind -d /dev/sda3 -s 1"
-echo "  sudo clevis luks unbind -d /dev/sda4 -s 1"
-echo "  sudo clevis luks unbind -d /dev/md0 -s 1"
-echo "  sudo clevis luks bind -d /dev/sda3 tpm2 '{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"0,1,2,3,4,5,6,7\"}'"
-echo "  sudo clevis luks bind -d /dev/sda4 tpm2 '{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"0,1,2,3,4,5,6,7\"}'"
-echo "  sudo clevis luks bind -d /dev/md0 tpm2 '{\"pcr_bank\":\"sha256\",\"pcr_ids\":\"0,1,2,3,4,5,6,7\"}'"
+echo "now you'll need to reboot and run:"
+echo "  UNBIND=1 ~/install/scripts/store-hdd-passphrases.sh"
