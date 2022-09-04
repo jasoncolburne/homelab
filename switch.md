@@ -9,7 +9,7 @@ In this document I walk through the steps required to build and configure a secu
 - How to configure AMD [SME](https://developer.amd.com/sev/)
 - How to configure AMD [SEV](https://developer.amd.com/sev/)
 - How to configure [Secure Boot](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface#SECURE-BOOT) on an AsRock Rack EPYCD8-2T
-- How to take advantage of [Trusted Boot](https://www.thewindowsclub.com/understanding-measured-boot-secure-boot-work-windows-8) to enable automatic decryption of storage devices
+- How to take advantage of [Trusted Computing](https://en.wikipedia.org/wiki/Trusted_Computing#Sealed_storage) to enable automatic decryption of storage devices
 - How to configure, build and [sign](https://en.wikipedia.org/wiki/Digital_signature) a custom Debian kernel
 - How to install a kernel and [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) image for boot
 
