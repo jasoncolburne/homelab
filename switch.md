@@ -340,13 +340,13 @@ HDD passphrases for SEDs.
 follows this logic:
   - Check lock status.
     - Locked
-      - Attempt to decrypt encrypted password
+      - Attempt to decrypt encrypted passkey
         - Success
           - Unlock SED
           - Done
         - Failure
           - Use `systemd-ask-password` to prompt the user for the user passphrase
-          - Derive the HDD passphrase using `argon2`
+          - Derive the HDD passkey using `argon2`
           - Unlock SED
           - Done
     - Unlocked
@@ -361,7 +361,10 @@ believe because I'm changing the UEFI image itself. I am considering putting the
 on the boot partition and mounting it during this process to see if I can include another PCR value.
 I changed from PCRs 0,1,2,3,4,5,6,7 to 0,2,3,4,6,7,8. I am having trouble finding a definitive
 answer on what these values represent, but through trial and error found a consistent set to
-measure.
+measure. Edit: I moved the encrypted keys to `/boot` and the PCR values became more stable. I was
+able to use 0,1,4,6,7,8,9,14 which appeared to be unique. 2, 3, and 6 were the same value, and every
+other register was populated with all ones or all zeros. I omitted 2 and 3 because the maximum
+number of registers a policy supports is 8, and I wanted all the unique, stable values.
 
 About this solution: We use a null salt for the `argon2` extension, since we want to be able to
 recover from passphrase alone. The argon2 params run in about 10 seconds on my system, which is a
