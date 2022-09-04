@@ -27,10 +27,9 @@ install() {
     inst_hook initqueue/settled 60 "$moddir/unlock-sed.sh"
 
     inst_multiple \
-        /etc/sedutil/nvme0.passphrase.enc \
-        /etc/sedutil/nvme1.passphrase.enc \
         /usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
         grep sed cut tr \
+        mount umount \
         argon2 \
         sedutil-cli \
         partprobe \

@@ -40,7 +40,9 @@ setup() {
   local HDD_NAME=$1
 
   derive_hdd_passphrase "${HDD_NAME}"
-  echo -n "${HDD_PASSPHRASE}" | sudo clevis encrypt tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,2,3,4,6,7,8"}' | sudo dd of=/etc/sedutil/${HDD_NAME}.passphrase.enc
+  # we can use at most 8 registers for a policy. i eliminated duplicates from the stable values to
+  # come up with exactly (luckily) 8 unique registers (0,1,4,6,7,8,9,14)
+  echo -n "${HDD_PASSPHRASE}" | sudo clevis encrypt tpm2 '{"pcr_bank":"sha256","pcr_ids":"0,1,4,6,7,8,9,14"}' | sudo dd of=/boot/sedutil/${HDD_NAME}.passphrase.enc
 
   if [[ "${INITIALIZE_HDDS:-0}" == "1" ]]; then
     PASSPHRASE_LABEL=PSID_${HDD_NAME}
@@ -56,12 +58,14 @@ setup() {
   unset HDD_PASSPHRASE
 }
 
-sudo mkdir -p /etc/sedutil
+sudo mkdir -p /boot/sedutil
 setup "nvme0"
 setup "nvme1"
 
-sudo mkdir -p /usr/lib/dracut/modules.d/60unlock-sed
-sudo cp ~/install/scripts/security/sedutil/module-setup.sh /usr/lib/dracut/modules.d/60unlock-sed
-sudo cp ~/install/scripts/security/sedutil/unlock-sed.sh /usr/lib/dracut/modules.d/60unlock-sed
+if [[ "${REBUILD_UEFI:-0}" == "1" ]]; then
+  sudo mkdir -p /usr/lib/dracut/modules.d/60unlock-sed
+  sudo cp ~/install/scripts/security/sedutil/module-setup.sh /usr/lib/dracut/modules.d/60unlock-sed
+  sudo cp ~/install/scripts/security/sedutil/unlock-sed.sh /usr/lib/dracut/modules.d/60unlock-sed
 
-sudo dracut -f --regenerate-all -v
+  sudo dracut -f --regenerate-all -v
+fi

@@ -29,9 +29,13 @@ unlock() {
   LOCKED=$(sedutil-cli --query /dev/${HDD_NAME} | grep Locked | cut -d',' -f1 | cut -d'=' -f2 | sed 's/ //g')
 
   if [[ "${LOCKED}" == "Y" ]]; then
-    HDD_PASSPHRASE=$( (cat /etc/sedutil/${HDD_NAME}.passphrase.enc | clevis decrypt) || true )
+    (mkdir /boot && mount /dev/sda2 /boot) || true
+
+    HDD_PASSPHRASE=$( (cat /boot/sedutil/${HDD_NAME}.passphrase.enc | clevis decrypt) || true )
     sedutil-cli --setLockingRange 0 rw "${HDD_PASSPHRASE}" /dev/${HDD_NAME} || true
     unset HDD_PASSPHRASE
+
+    (umount /boot && rm -rf /boot) || true
 
     LOCKED=$(sedutil-cli --query /dev/${HDD_NAME} | grep Locked | cut -d',' -f1 | cut -d'=' -f2 | sed 's/ //g')
 
@@ -47,6 +51,8 @@ unlock() {
     echo "/dev/${HDD_NAME} is already unlocked. continuing." >&2
   fi
 }
+
+
 
 echo "unlocking nvme drives" >&2
 unlock "nvme0"
