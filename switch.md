@@ -304,6 +304,13 @@ uptime.
  12:14:14 up 11:34,  1 user,  load average: 2.14, 1.97, 1.98
 ```
 
+Edit: New drives appear to have fixed things..
+
+```
+❯ uptime
+ 01:52:24 up 19 days,  1:28,  1 user,  load average: 0.48, 1.98, 1.79
+```
+
 ### SED Passwordless Boot via `dracut`, `clevis` and `sedutil-cli`
 
 It turns out that using a TPM to unlock both SEDs and LUKS drives in an automated way with secure
